@@ -85,7 +85,8 @@ class Client {
       if (response.statusCode == 201) {
         final tokenFetched = jsonDecode(response.body)['token'];
 
-        BoxPayCheckout boxPayCheckout = BoxPayCheckout(context, tokenFetched);
+        BoxPayCheckout boxPayCheckout =
+            BoxPayCheckout(context, tokenFetched, onPaymentResult);
         boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
@@ -98,5 +99,7 @@ class Client {
     }
   }
 
-  
+  void onPaymentResult(String result) {
+    print(result);
+  }
 }
