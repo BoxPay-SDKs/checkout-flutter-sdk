@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webview_sdk/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -18,34 +19,57 @@ class WebViewPage extends StatefulWidget {
 }
 
 class _WebViewPageState extends State<WebViewPage> {
-  WebViewController controller = WebViewController();
+  late WebViewController _controller;
+  String currentUrl = '';
 
   @override
   void initState() {
     super.initState();
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(NavigationDelegate(
-        onProgress: (progress) => {},
-        onPageStarted: (url) => {},
-        onPageFinished: (url) => {},
-      ))
-      ..loadRequest(Uri.parse(
-          'https://test-checkout.boxpay.tech/?token=${widget.token}'));
     startFunctionCalls();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(child: WebViewWidget(controller: controller)),
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        if (currentUrl !=
+            'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes') {
+          currentUrl =
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+          _controller.loadUrl(
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes');
+          return false;
+        } else {
+          Navigator.of(context).pop();
+          return true;
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: const CustomAppBar(title: 'Checkout'),
+        body: SafeArea(
+          child: WebView(
+            initialUrl:
+                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes',
+            onWebViewCreated: (WebViewController webViewController) {
+              _controller = webViewController;
+              currentUrl =
+                  'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+            },
+            javascriptMode: JavascriptMode.unrestricted,
+            navigationDelegate: (NavigationRequest request) {
+              currentUrl = request.url;
+              return NavigationDecision.navigate;
+            },
+          ),
+        ),
+      ),
     );
   }
 
   void startFunctionCalls() {
-    job = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
+    job = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
       fetchStatusAndReason(
           "https://test-apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
     });
@@ -54,20 +78,17 @@ class _WebViewPageState extends State<WebViewPage> {
   void stopFunctionCalls() {
     if (job != null) {
       job!.cancel();
-      job = null; // Set it to null to indicate it's not running
+      job = null;
     }
   }
 
   void fetchStatusAndReason(String url) async {
-    print("fetching function called correctly"); // Equivalent to Log.d
     try {
       var response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        print("WebView Status: $status");
-        print("Status Reason: $statusReason");
         if (status.toUpperCase().contains("APPROVED") ||
             statusReason
                 .toUpperCase()
@@ -81,9 +102,7 @@ class _WebViewPageState extends State<WebViewPage> {
         } else if (status.toUpperCase().contains("FAILED")) {
           job?.cancel(); // Dart does not have a direct equivalent of this line
         }
-      } else {
-        print("Request failed with status: ${response.statusCode}");
-      }
+      } else {}
     } catch (e) {
       print("Error occurred: $e");
     }
