@@ -83,6 +83,7 @@ class Client {
       final response =
           await http.post(url, headers: headers, body: jsonEncode(jsonData));
       if (response.statusCode == 201) {
+        print("response from session api: ${response}");
         final tokenFetched = jsonDecode(response.body)['token'];
 
         BoxPayCheckout boxPayCheckout =

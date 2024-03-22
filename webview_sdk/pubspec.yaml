@@ -12,7 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.1
-  webview_flutter: ^4.7.0  
+  webview_flutter: ^3.0.4
+  shared_preferences: ^2.0.0
 
 dev_dependencies:
   flutter_test:
