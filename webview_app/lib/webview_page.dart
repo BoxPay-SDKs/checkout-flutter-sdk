@@ -33,12 +33,12 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl !=
-            'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes') {
+        print("url to redirect: $currentUrl");
+        if (!currentUrl.contains('hmh') || !currentUrl.contains('hui')) {
           currentUrl =
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
           _controller.loadUrl(
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes');
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
           return false;
         } else {
           Navigator.of(context).pop();
@@ -46,16 +46,16 @@ class _WebViewPageState extends State<WebViewPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: const CustomAppBar(title: 'Checkout'),
         body: SafeArea(
           child: WebView(
             initialUrl:
-                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes',
+                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1',
             onWebViewCreated: (WebViewController webViewController) {
               _controller = webViewController;
               currentUrl =
-                  'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+                  'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
             },
             javascriptMode: JavascriptMode.unrestricted,
             navigationDelegate: (NavigationRequest request) {
@@ -69,7 +69,7 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void startFunctionCalls() {
-    job = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+    job = Timer.periodic(Duration(seconds: 1), (Timer timer) async {
       fetchStatusAndReason(
           "https://test-apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
     });
@@ -96,11 +96,20 @@ class _WebViewPageState extends State<WebViewPage> {
             statusReason.toUpperCase().contains("APPROVED BY PSP") ||
             status.toUpperCase().contains("PAID")) {
           widget.onPaymentResult("SUCCESS");
+          job?.cancel();
         } else if (status.toUpperCase().contains("PENDING")) {
         } else if (status.toUpperCase().contains("EXPIRED")) {
         } else if (status.toUpperCase().contains("PROCESSING")) {
         } else if (status.toUpperCase().contains("FAILED")) {
-          job?.cancel(); // Dart does not have a direct equivalent of this line
+          print("enter failed block");
+          if (currentUrl !=
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1') {
+            currentUrl =
+                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+            _controller.loadUrl(
+                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
+          }
+          // job?.cancel();
         }
       } else {}
     } catch (e) {

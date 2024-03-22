@@ -33,12 +33,11 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl !=
-            'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes') {
+        if (!currentUrl.contains('hmh') || !currentUrl.contains('hui')) {
           currentUrl =
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
           _controller.loadUrl(
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes');
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
           return false;
         } else {
           Navigator.of(context).pop();
@@ -46,16 +45,16 @@ class _WebViewPageState extends State<WebViewPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
         appBar: const CustomAppBar(title: 'Checkout'),
         body: SafeArea(
           child: WebView(
             initialUrl:
-                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes',
+                'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1',
             onWebViewCreated: (WebViewController webViewController) {
               _controller = webViewController;
               currentUrl =
-                  'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=fmani&hmh=yes';
+                  'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
             },
             javascriptMode: JavascriptMode.unrestricted,
             navigationDelegate: (NavigationRequest request) {
@@ -100,7 +99,11 @@ class _WebViewPageState extends State<WebViewPage> {
         } else if (status.toUpperCase().contains("EXPIRED")) {
         } else if (status.toUpperCase().contains("PROCESSING")) {
         } else if (status.toUpperCase().contains("FAILED")) {
-          job?.cancel(); // Dart does not have a direct equivalent of this line
+          currentUrl =
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+          _controller.loadUrl(
+              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
+          job?.cancel();
         }
       } else {}
     } catch (e) {
