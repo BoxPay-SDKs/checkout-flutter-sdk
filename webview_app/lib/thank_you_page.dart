@@ -3,6 +3,8 @@ import 'package:webview_app/custom_appbar.dart';
 
 
 class ThankYouPage extends StatelessWidget {
+  const ThankYouPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
