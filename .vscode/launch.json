@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "webview_app",
+            "cwd": "webview_app",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "webview_app (profile mode)",
+            "cwd": "webview_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "webview_app (release mode)",
+            "cwd": "webview_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "webview_sdk",
+            "cwd": "webview_sdk",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "webview_sdk (profile mode)",
+            "cwd": "webview_sdk",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "webview_sdk (release mode)",
+            "cwd": "webview_sdk",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
