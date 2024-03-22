@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:webview_app/boxpay_checkout.dart';
 import 'dart:convert';
 
+import 'package:webview_app/thank_you_page.dart';
+
 class Client {
   BuildContext context;
 
@@ -88,7 +90,7 @@ class Client {
 
         BoxPayCheckout boxPayCheckout =
             BoxPayCheckout(context, tokenFetched, onPaymentResult);
-        boxPayCheckout.display();
+        await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
         print('Details: ${response.body}');
@@ -101,6 +103,13 @@ class Client {
   }
 
   void onPaymentResult(String result) {
-    print(result);
+    if (result == "SUCCESS") {
+      // Close BoxPayCheckout and navigate to thank you page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ThankYouPage()),
+      );
+      print(result);
+    }
   }
 }
