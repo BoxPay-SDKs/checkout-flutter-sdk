@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_app/boxpay_checkout.dart';
+import 'package:webview_app/payment_result_object.dart';
 import 'dart:convert';
 
 import 'package:webview_app/thank_you_page.dart';
@@ -102,14 +103,13 @@ class Client {
     }
   }
 
-  void onPaymentResult(String result) {
-    if (result == "SUCCESS") {
+  void onPaymentResult(PaymentResultObject status) {
+    if (status.result == "SUCCESS") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => ThankYouPage()),
       );
-      print(result);
     }
   }
 }

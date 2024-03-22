@@ -1,3 +1,4 @@
+import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -7,7 +8,7 @@ import 'package:checkout_flutter_sdk/webview_page.dart';
 class BoxPayCheckout {
   BuildContext context;
   String token;
-  final Function(String) onPaymentResult;
+  final Function(PaymentResultObject) onPaymentResult;
 
   BoxPayCheckout(this.context, this.token, this.onPaymentResult);
 

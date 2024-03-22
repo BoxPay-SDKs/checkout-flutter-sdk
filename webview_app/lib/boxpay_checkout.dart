@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_app/payment_result_object.dart';
 import 'package:webview_app/webview_page.dart';
 
 class BoxPayCheckout {
   BuildContext context;
   String token;
-  final Function(String) onPaymentResult;
+  final Function(PaymentResultObject) onPaymentResult;
 
   BoxPayCheckout(this.context, this.token, this.onPaymentResult);
 
