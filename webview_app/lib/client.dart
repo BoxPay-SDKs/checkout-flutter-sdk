@@ -67,7 +67,8 @@ class Client {
             "brand": null,
             "color": null,
             "productUrl": null,
-            "imageUrl": "https://test-merchant.boxpay.tech/boxpay%20logo.svg",
+            "imageUrl":
+                "https://www.kasandbox.org/programming-images/avatars/old-spice-man.png",
             "categories": null,
             "amountWithoutTax": 10,
             "taxAmount": 10,
