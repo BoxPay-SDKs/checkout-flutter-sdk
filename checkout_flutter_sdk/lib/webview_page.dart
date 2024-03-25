@@ -1,3 +1,4 @@
+import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'package:checkout_flutter_sdk/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -10,7 +11,7 @@ bool isFlagSet = false;
 
 class WebViewPage extends StatefulWidget {
   final String token;
-  final Function(String) onPaymentResult;
+  final Function(PaymentResultObject) onPaymentResult;
 
   const WebViewPage(
       {super.key, required this.token, required this.onPaymentResult});
@@ -156,7 +157,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 .contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason.toUpperCase().contains("APPROVED BY PSP") ||
             status.toUpperCase().contains("PAID")) {
-          widget.onPaymentResult("SUCCESS");
+          widget.onPaymentResult(PaymentResultObject("SUCCESS"));
           job?.cancel();
         } else if (status.toUpperCase().contains("PENDING")) {
         } else if (status.toUpperCase().contains("EXPIRED")) {
