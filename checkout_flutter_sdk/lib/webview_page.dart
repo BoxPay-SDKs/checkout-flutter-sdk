@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 
 Timer? job;
+bool isFlagSet = false;
 
 class WebViewPage extends StatefulWidget {
   final String token;
@@ -26,6 +27,7 @@ class _WebViewPageState extends State<WebViewPage> {
   void initState() {
     super.initState();
     startFunctionCalls();
+    isFlagSet = false;
   }
 
   @override
@@ -45,7 +47,7 @@ class _WebViewPageState extends State<WebViewPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: const CustomAppBar(title: 'Checkout'),
         body: SafeArea(
           child: WebView(
@@ -68,7 +70,7 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void startFunctionCalls() {
-    job = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+    job = Timer.periodic(const Duration(milliseconds: 500), (Timer timer) async {
       fetchStatusAndReason(
           "https://test-apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
     });
@@ -80,6 +82,66 @@ class _WebViewPageState extends State<WebViewPage> {
       job = null;
     }
   }
+
+  void handlePaymentFailure(BuildContext context) {
+
+  if (!isFlagSet && currentUrl.contains("pns")) {
+    isFlagSet = true;
+    stopFunctionCalls();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Stack(
+          children: <Widget>[
+            Container(
+              color: Colors.white, 
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+            ),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: CustomAppBar(title: 'Checkout'),
+            ),
+            AlertDialog(
+              title: const Text("Payment Failed"),
+              content: const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text("Do you want to retry?"),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _controller.loadUrl(
+                        'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
+                    currentUrl =
+                        'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+                    startFunctionCalls();
+                    isFlagSet = false;
+                  },
+                  child: const Text("Retry"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Exit"),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 
   void fetchStatusAndReason(String url) async {
     try {
@@ -95,15 +157,12 @@ class _WebViewPageState extends State<WebViewPage> {
             statusReason.toUpperCase().contains("APPROVED BY PSP") ||
             status.toUpperCase().contains("PAID")) {
           widget.onPaymentResult("SUCCESS");
+          job?.cancel();
         } else if (status.toUpperCase().contains("PENDING")) {
         } else if (status.toUpperCase().contains("EXPIRED")) {
         } else if (status.toUpperCase().contains("PROCESSING")) {
-        } else if (status.toUpperCase().contains("FAILED")) {
-          currentUrl =
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-          _controller.loadUrl(
-              'https://test-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
-          job?.cancel();
+        } else if (status.toUpperCase().contains("FAILED") && !isFlagSet) {
+          handlePaymentFailure(context);
         }
       } else {}
     } catch (e) {
