@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -6,52 +7,38 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checkout_flutter_sdk/webview_page.dart';
 
 class BoxPayCheckout {
-  BuildContext context;
-  String token;
+  final BuildContext context;
+  final String token;
   final Function(PaymentResultObject) onPaymentResult;
+  String env;
 
-  BoxPayCheckout(this.context, this.token, this.onPaymentResult);
+  BoxPayCheckout(
+      {required this.context,
+      required this.token,
+      required this.onPaymentResult,
+      String? env})
+      : env = env ?? "test";
 
-  Future<void> display() async {
-    final responseData = await fetchSessionDataFromApi(token);
-    final merchantDetails = extractMerchantDetails(responseData);
-    await storeMerchantDetailsInSharedPreferences(merchantDetails);
+Future<void> display() async {
+  final responseData = await fetchSessionDataFromApi(token);
+  final merchantDetails = extractMerchantDetails(responseData);
+  await storeMerchantDetailsInSharedPreferences(merchantDetails);
 
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // ignore: deprecated_member_use
-        return WillPopScope(
-          onWillPop: () async {
-            return (await showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Cancel Payment'),
-                    content: const Text(
-                        'Your paymnet is ongoing. Are you sure you want to cancel the payment in between?'),
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('No'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Yes, Cancel'),
-                      ),
-                    ],
-                  ),
-                )) ??
-                false;
-          },
-          child: WebViewPage(token: token, onPaymentResult: onPaymentResult),
-        );
-      },
-    );
-  }
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (BuildContext context) => WebViewPage(
+        token: token,
+        onPaymentResult: onPaymentResult,
+        env: env,
+      ),
+    ),
+  );
+}
+  
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    final apiUrl = 'https://test-apis.boxpay.tech/v0/checkout/sessions/$token';
-
+    final apiUrl =
+        'https://${env}-apis.boxpay.tech/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

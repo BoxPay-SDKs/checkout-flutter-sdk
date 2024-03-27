@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest() async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/gZOlwkSlVe/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/hK3JrVc6ys/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer XyUQOoLDgHlgxAojYhY22ev4P6icr94XIMkxrISZFQnAZIOueM4WbFAWGDc0Q6jPcWBkCXfXWpvRlHoQ5fl20d'
+          'Bearer afcGgCv6mOVIIpnFPWBL44RRciVU8oMteV5ZhC2nwjjjuw8z0obKMjdK8ShcwLOU6uRNjQryLKl1pLAsLAXSI'
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -91,7 +91,7 @@ class Client {
         final tokenFetched = jsonDecode(response.body)['token'];
 
         BoxPayCheckout boxPayCheckout =
-            BoxPayCheckout(context, tokenFetched, onPaymentResult);
+            BoxPayCheckout(context: context,token: tokenFetched, onPaymentResult: onPaymentResult);
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
