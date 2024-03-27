@@ -32,7 +32,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           final headerColor = merchantDetails['checkoutTheme']['headerColor'];
           final logoUrl = merchantDetails['logoUrl'];
 
-          final color = Color(int.parse(headerColor.substring(1, 7), radix: 16) + 0xFF000000);
+          final color = Color(
+              int.parse(headerColor.substring(1, 7), radix: 16) + 0xFF000000);
 
           // List of widgets for the app bar actions
           List<Widget> actions = [];

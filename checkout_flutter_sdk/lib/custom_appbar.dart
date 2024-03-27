@@ -53,8 +53,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               if (actions.isNotEmpty) ...[
                 actions[0], // Display the logo
-                SizedBox(width: 8), // Add some spacing between logo and title
               ],
+              const SizedBox(width: 4),
               Text(merchantName), // Display the title
             ],
           );
