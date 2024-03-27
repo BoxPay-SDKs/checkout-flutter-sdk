@@ -19,22 +19,22 @@ class BoxPayCheckout {
       String? env})
       : env = env ?? "test";
 
-Future<void> display() async {
-  final responseData = await fetchSessionDataFromApi(token);
-  final merchantDetails = extractMerchantDetails(responseData);
-  await storeMerchantDetailsInSharedPreferences(merchantDetails);
+  Future<void> display() async {
+    final responseData = await fetchSessionDataFromApi(token);
+    final merchantDetails = extractMerchantDetails(responseData);
+    await storeMerchantDetailsInSharedPreferences(merchantDetails);
 
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (BuildContext context) => WebViewPage(
-        token: token,
-        onPaymentResult: onPaymentResult,
-        env: env,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (BuildContext context) => WebViewPage(
+          token: token,
+          onPaymentResult: onPaymentResult,
+          env: env,
+        ),
       ),
-    ),
-  );
-}
-  
+    );
+  }
+
 
   Future<String> fetchSessionDataFromApi(String token) async {
     final apiUrl =
@@ -61,6 +61,5 @@ Future<void> display() async {
     final prefs = await SharedPreferences.getInstance();
     final merchantDetailsJson = jsonEncode(merchantDetails);
     await prefs.setString('merchant_details', merchantDetailsJson);
-    print("merchantDetailsJson $merchantDetailsJson");
   }
 }

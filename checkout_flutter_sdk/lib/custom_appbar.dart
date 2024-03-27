@@ -31,7 +31,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           final headerColor = merchantDetails['checkoutTheme']['headerColor'];
           final logoUrl = merchantDetails['logoUrl'];
 
-          final color = Color(int.parse(headerColor.substring(1, 7), radix: 16) + 0xFF000000);
+          final color = Color(
+              int.parse(headerColor.substring(1, 7), radix: 16) + 0xFF000000);
 
           // List of widgets for the app bar actions
           List<Widget> actions = [];
@@ -53,8 +54,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               if (actions.isNotEmpty) ...[
                 actions[0], // Display the logo
+                SizedBox(width: 8), // Add some spacing between logo and title
               ],
-              const SizedBox(width: 4),
               Text(merchantName), // Display the title
             ],
           );
