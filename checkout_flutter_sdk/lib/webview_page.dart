@@ -157,11 +157,9 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void handlePaymentFailure(BuildContext context) {
-    print("handle function : $currentUrl");
     if (!isFlagSet &&
         (currentUrl.contains("pns") || !currentUrl.contains("hui"))) {
       isFlagSet = true;
-      print("enter failed block with pns $currentUrl");
       stopFunctionCalls();
       showDialog(
         context: context,
@@ -221,13 +219,10 @@ class _WebViewPageState extends State<WebViewPage> {
   void fetchStatusAndReason(String url) async {
     try {
       var response = await http.get(Uri.parse(url));
-      print(response);
-      print("url fetched: ${currentUrl}");
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        print("Status: $status");
         if (status.toUpperCase().contains("APPROVED") ||
             statusReason
                 .toUpperCase()
@@ -279,7 +274,6 @@ class _WebViewPageState extends State<WebViewPage> {
               });
         } else if (status.toUpperCase().contains("PROCESSING")) {
         } else if (status.toUpperCase().contains("FAILED")) {
-          print("Status: $status");
           // handlePaymentFailure(context);
         }
       } else {}
