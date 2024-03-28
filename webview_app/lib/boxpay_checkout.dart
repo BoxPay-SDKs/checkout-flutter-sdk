@@ -22,7 +22,10 @@ class BoxPayCheckout {
   Future<void> display() async {
     final responseData = await fetchSessionDataFromApi(token);
     final merchantDetails = extractMerchantDetails(responseData);
-    await storeMerchantDetailsInSharedPreferences(merchantDetails);
+    final backurl = extractBackURL(responseData);
+    final returnurl = extractReturnURL(responseData);
+    await storeMerchantDetailsAndReturnUrlInSharedPreferences(
+        merchantDetails, backurl, returnurl);
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -56,11 +59,24 @@ class BoxPayCheckout {
     return parsedData['merchantDetails'];
   }
 
-  Future<void> storeMerchantDetailsInSharedPreferences(
-      Map<String, dynamic> merchantDetails) async {
+  String extractBackURL(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    return parsedData['paymentDetails']['frontendBackUrl'];
+  }
+
+  String extractReturnURL(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    return parsedData['paymentDetails']['frontendReturnUrl'];
+  }
+
+  Future<void> storeMerchantDetailsAndReturnUrlInSharedPreferences(
+      Map<String, dynamic> merchantDetails,
+      String beckurl,
+      String returnurl) async {
     final prefs = await SharedPreferences.getInstance();
     final merchantDetailsJson = jsonEncode(merchantDetails);
     await prefs.setString('merchant_details', merchantDetailsJson);
-    print("merchantDetailsJson $merchantDetailsJson");
+    await prefs.setString('backurl', beckurl);
+    await prefs.setString('returnurl', returnurl);
   }
 }

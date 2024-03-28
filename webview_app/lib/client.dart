@@ -80,7 +80,7 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendReturnUrl": "https://www.boxpay.tech",
+      "frontendReturnUrl": "https://api.flutter.dev/flutter/material/ElevatedButton-class.html",
       "frontendBackUrl": "https://www.boxpay.tech"
     };
     try {

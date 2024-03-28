@@ -1,6 +1,8 @@
+import 'package:checkout_flutter_sdk/dialogs/redirect_modal.dart';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'package:checkout_flutter_sdk/custom_appbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -27,12 +29,15 @@ class WebViewPage extends StatefulWidget {
 class _WebViewPageState extends State<WebViewPage> {
   late WebViewController _controller;
   String currentUrl = '';
+  late String backUrl = '';
+  late String returnUrl = '';
 
   @override
   void initState() {
     super.initState();
     startFunctionCalls();
     isFlagSet = false;
+    fetchReturnUrl();
   }
 
   @override
@@ -40,70 +45,34 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl.contains('www.boxpay.tech')) {
-          Completer<bool> completer = Completer<bool>();
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Confirmation'),
-                content: Text('Are you sure you want to go back?'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      completer.complete(false);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      currentUrl =
-                          'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-                      _controller.loadUrl(currentUrl);
-                      completer.complete(false);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Yes'),
-                  ),
-                ],
-              );
-            },
-          );
-          return completer.future;
+        if (currentUrl == backUrl) {
+          return redirectModal(context,
+              title: "Confirmation",
+              content: "Are you sure you want to go back?",
+              noButtonText: "Exit Anyway",
+              yesButtonText: "Stay", onYesPressed: (Completer<bool> completer) {
+            completer.complete(false);
+          }, onNoPressed: (Completer<bool> completer) {
+            currentUrl =
+                'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+            _controller.loadUrl(currentUrl);
+            completer.complete(false);
+          });
         } else if (!currentUrl.contains('hmh') || !currentUrl.contains('hui')) {
-          Completer<bool> completer = Completer<bool>();
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Cancel Payment'),
-                content: const Text(
-                    'Your payment is ongoing. Are you sure you want to cancel the payment in between?'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      completer.complete(false);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Reload the WebView with a specific URL
-                      currentUrl =
-                          'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-                      _controller.loadUrl(currentUrl);
-                      completer.complete(false);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Yes, Cancel'),
-                  ),
-                ],
-              );
-            },
-          );
-          return completer.future;
+          return redirectModal(context,
+              title: "Cancel Payment",
+              content:
+                  "Your payment is ongoing. Are you sure you want to cancel the payment in between?",
+              noButtonText: "No",
+              yesButtonText: "Yes, cancel",
+              onNoPressed: (Completer<bool> completer) {
+            completer.complete(false);
+          }, onYesPressed: (Completer<bool> completer) {
+            currentUrl =
+                'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+            _controller.loadUrl(currentUrl);
+            completer.complete(false);
+          });
         } else {
           Navigator.of(context).pop();
           return true;
@@ -120,18 +89,18 @@ class _WebViewPageState extends State<WebViewPage> {
               _controller = webViewController;
               currentUrl =
                   'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-              print("token: ${widget.token}");
             },
             javascriptMode: JavascriptMode.unrestricted,
             navigationDelegate: (NavigationRequest request) {
               currentUrl = request.url;
-              print("current url navigation: ${currentUrl}");
               if (currentUrl.contains("pns")) {
                 handlePaymentFailure(context);
               } else if (currentUrl == 'https://www.boxpay.tech/') {
                 currentUrl =
                     'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
                 _controller.loadUrl(currentUrl);
+                return NavigationDecision.prevent;
+              } else if (currentUrl.contains(returnUrl)) {
                 return NavigationDecision.prevent;
               }
               return NavigationDecision.navigate;
@@ -163,6 +132,7 @@ class _WebViewPageState extends State<WebViewPage> {
       stopFunctionCalls();
       showDialog(
         context: context,
+        barrierDismissible: true,
         builder: (BuildContext context) {
           return Stack(
             children: <Widget>[
@@ -178,42 +148,46 @@ class _WebViewPageState extends State<WebViewPage> {
                 right: 0,
                 child: CustomAppBar(title: 'Checkout'),
               ),
-              AlertDialog(
-                title: const Text("Payment Failed"),
-                content: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text("Do you want to retry?"),
-                  ],
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      _controller.loadUrl(
-                          'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
-                      currentUrl =
-                          'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-                      startFunctionCalls();
-                      isFlagSet = false;
-                    },
-                    child: const Text("Retry"),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text("Exit"),
-                  ),
-                ],
-              ),
             ],
           );
         },
       );
+      redirectModal(
+        context,
+        title: "Payment Failed",
+        content: "Do you want to retry?",
+        noButtonText: "Exit",
+        yesButtonText: "Retry",
+        onYesPressed: (Completer<bool> completer) {
+          _controller.loadUrl(
+              'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
+          currentUrl =
+              'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+          startFunctionCalls();
+          isFlagSet = false;
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.of(context).pop();
+          });
+
+          completer.complete(true);
+        },
+        onNoPressed: (Completer<bool> completer) {
+          Navigator.of(context).pop();
+          Navigator.of(context).pop();
+          completer.complete(false);
+        },
+      );
     }
+  }
+
+  Future<void> fetchReturnUrl() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      backUrl = prefs.getString('backurl') ?? '';
+    });
+    setState(() {
+      returnUrl = prefs.getString('returnurl') ?? '';
+    });
   }
 
   void fetchStatusAndReason(String url) async {
@@ -231,6 +205,7 @@ class _WebViewPageState extends State<WebViewPage> {
             status.toUpperCase().contains("PAID")) {
           widget.onPaymentResult(PaymentResultObject("SUCCESS"));
           job?.cancel();
+          stopFunctionCalls();
         } else if (status.toUpperCase().contains("PENDING")) {
         } else if (status.toUpperCase().contains("EXPIRED")) {
           showDialog(

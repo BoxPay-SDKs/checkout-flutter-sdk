@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const CustomAppBar({super.key, required this.title});
+  const CustomAppBar({Key? key, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,34 +13,33 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       future: _getMerchantDetailsFromSharedPreferences(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Return a default AppBar while waiting for data
           return AppBar(
             backgroundColor: Color.fromARGB(255, 14, 93, 158),
             title: Text(title),
           );
         } else if (snapshot.hasError) {
-          // Return a default AppBar if an error occurs
           return AppBar(
             backgroundColor: Color.fromARGB(255, 14, 93, 158),
             title: Text(title),
           );
         } else {
           final merchantDetails = jsonDecode(snapshot.data!);
-
           final merchantName = merchantDetails['merchantName'];
           final headerColor = merchantDetails['checkoutTheme']['headerColor'];
           final logoUrl = merchantDetails['logoUrl'];
+          final font = merchantDetails['checkoutTheme']['font'] ?? "Poppins";
+          final headerTextColor =
+              merchantDetails['checkoutTheme']['headerTextColor'];
 
           final color = Color(
               int.parse(headerColor.substring(1, 7), radix: 16) + 0xFF000000);
 
-          // List of widgets for the app bar actions
           List<Widget> actions = [];
 
           if (logoUrl != null && logoUrl.isNotEmpty) {
             actions.add(
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(0),
                 child: CircleAvatar(
                   radius: 16,
                   backgroundImage: NetworkImage(logoUrl),
@@ -49,18 +48,28 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           }
 
-          // Create a row with logo and title
           Widget appBarTitle = Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               if (actions.isNotEmpty) ...[
-                actions[0], // Display the logo
-                SizedBox(width: 8), // Add some spacing between logo and title
+                actions[0], 
+                SizedBox(width: 8),
               ],
-              Text(merchantName), // Display the title
+              Text(
+                merchantName,
+                style: TextStyle(
+                  color: Color(
+                      int.parse(headerTextColor.substring(1, 7), radix: 16) +
+                          0xFF000000),
+                  fontFamily: font,
+                ),
+                
+              ),
             ],
           );
 
           return AppBar(
+            titleSpacing: 0.0,
             title: appBarTitle,
             backgroundColor: color,
           );
