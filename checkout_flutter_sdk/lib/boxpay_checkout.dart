@@ -10,22 +10,23 @@ class BoxPayCheckout {
   final BuildContext context;
   final String token;
   final Function(PaymentResultObject) onPaymentResult;
+  bool sandboxEnabled;
   String env;
 
   BoxPayCheckout(
       {required this.context,
       required this.token,
       required this.onPaymentResult,
-      String? env})
-      : env = env ?? "test";
+      bool? sandboxEnabled})
+      : sandboxEnabled = sandboxEnabled ?? false,
+        env = sandboxEnabled == true ? "sandbox-" : "test-";
 
   Future<void> display() async {
     final responseData = await fetchSessionDataFromApi(token);
     final merchantDetails = extractMerchantDetails(responseData);
     final backurl = extractBackURL(responseData);
-    final returnurl = extractReturnURL(responseData);
     await storeMerchantDetailsAndReturnUrlInSharedPreferences(
-        merchantDetails, backurl, returnurl);
+        merchantDetails, backurl);
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -39,11 +40,16 @@ class BoxPayCheckout {
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    final apiUrl =
-        'https://${env}-apis.boxpay.tech/v0/checkout/sessions/$token';
+    String apienv;
+    if (sandboxEnabled) {
+      apienv = "sandbox";
+    }
+    else{
+      apienv = "test";
+    }
+    final apiUrl = 'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
-      print(response);
       if (response.statusCode == 200) {
         return response.body;
       } else {
@@ -64,19 +70,13 @@ class BoxPayCheckout {
     return parsedData['paymentDetails']['frontendBackUrl'];
   }
 
-  String extractReturnURL(String responseData) {
-    final Map<String, dynamic> parsedData = jsonDecode(responseData);
-    return parsedData['paymentDetails']['frontendReturnUrl'];
-  }
-
   Future<void> storeMerchantDetailsAndReturnUrlInSharedPreferences(
-      Map<String, dynamic> merchantDetails,
-      String beckurl,
-      String returnurl) async {
+    Map<String, dynamic> merchantDetails,
+    String beckurl,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final merchantDetailsJson = jsonEncode(merchantDetails);
     await prefs.setString('merchant_details', merchantDetailsJson);
     await prefs.setString('backurl', beckurl);
-    await prefs.setString('returnurl', returnurl);
   }
 }
