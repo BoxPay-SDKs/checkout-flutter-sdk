@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest() async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/hK3JrVc6ys/sessions");
+        "https://sandbox-apis.boxpay.tech/v0/merchants/gG4azzRSLu/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer afcGgCv6mOVIIpnFPWBL44RRciVU8oMteV5ZhC2nwjjjuw8z0obKMjdK8ShcwLOU6uRNjQryLKl1pLAsLAXSI'
+          'Bearer 67mNiuo6eftyAoLUfipZGmfSiZhyiXwa5nPTC7zhfwmmhEsLaqBXzZg5ivn6haNWlmYAoYKxaaANreuyGZ08i2'
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -80,18 +80,21 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendReturnUrl": "https://api.flutter.dev/flutter/material/ElevatedButton-class.html",
-      "frontendBackUrl": "https://www.boxpay.tech"
+      "frontendReturnUrl":
+          "https://www.boxpay.tech",
+      "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/"
     };
     try {
       final response =
           await http.post(url, headers: headers, body: jsonEncode(jsonData));
       if (response.statusCode == 201) {
-        print("response from session api: ${response}");
         final tokenFetched = jsonDecode(response.body)['token'];
 
-        BoxPayCheckout boxPayCheckout =
-            BoxPayCheckout(context: context,token: tokenFetched, onPaymentResult: onPaymentResult);
+        BoxPayCheckout boxPayCheckout = BoxPayCheckout(
+            context: context,
+            token: tokenFetched,
+            onPaymentResult: onPaymentResult,
+            sandboxEnabled: true);
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
@@ -105,7 +108,7 @@ class Client {
   }
 
   void onPaymentResult(PaymentResultObject status) {
-    if (status.result == "SUCCESS") {
+    if (status.result == "Success") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
         context,

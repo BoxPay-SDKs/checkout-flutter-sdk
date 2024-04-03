@@ -30,7 +30,6 @@ class _WebViewPageState extends State<WebViewPage> {
   late WebViewController _controller;
   String currentUrl = '';
   late String backUrl = '';
-  late String returnUrl = '';
 
   @override
   void initState() {
@@ -45,7 +44,8 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl == backUrl) {
+        if (currentUrl.contains(backUrl) ||
+            currentUrl.contains('privacy') || currentUrl.contains('terms-conditions')) {
           return redirectModal(context,
               title: "Confirmation",
               content: "Are you sure you want to go back?",
@@ -54,7 +54,7 @@ class _WebViewPageState extends State<WebViewPage> {
             completer.complete(false);
           }, onNoPressed: (Completer<bool> completer) {
             currentUrl =
-                'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+                'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
             _controller.loadUrl(currentUrl);
             completer.complete(false);
           });
@@ -67,14 +67,16 @@ class _WebViewPageState extends State<WebViewPage> {
               yesButtonText: "Yes, cancel",
               onNoPressed: (Completer<bool> completer) {
             completer.complete(false);
+            stopFunctionCalls();
           }, onYesPressed: (Completer<bool> completer) {
             currentUrl =
-                'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+                'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
             _controller.loadUrl(currentUrl);
             completer.complete(false);
           });
         } else {
           Navigator.of(context).pop();
+          stopFunctionCalls();
           return true;
         }
       },
@@ -84,23 +86,34 @@ class _WebViewPageState extends State<WebViewPage> {
         body: SafeArea(
           child: WebView(
             initialUrl:
-                'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1',
+                'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1',
             onWebViewCreated: (WebViewController webViewController) {
               _controller = webViewController;
               currentUrl =
-                  'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+                  'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+            },
+            onPageStarted: (String url) {
+              setState(() {
+                currentUrl = url;
+              });
+            },
+            onPageFinished: (String url) {
+              setState(() {
+                currentUrl = url;
+              });
             },
             javascriptMode: JavascriptMode.unrestricted,
-            navigationDelegate: (NavigationRequest request) {
+            navigationDelegate: (NavigationRequest request) async {
               currentUrl = request.url;
               if (currentUrl.contains("pns")) {
                 handlePaymentFailure(context);
               } else if (currentUrl == 'https://www.boxpay.tech/') {
                 currentUrl =
-                    'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
-                _controller.loadUrl(currentUrl);
+                    'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+                await _controller.loadUrl(currentUrl);
                 return NavigationDecision.prevent;
-              } else if (currentUrl.contains(returnUrl)) {
+              } else if (currentUrl.contains(backUrl)) {
+                Navigator.of(context).pop();
                 return NavigationDecision.prevent;
               }
               return NavigationDecision.navigate;
@@ -114,7 +127,7 @@ class _WebViewPageState extends State<WebViewPage> {
   void startFunctionCalls() {
     job = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
       fetchStatusAndReason(
-          "https://${widget.env}-apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
+          "https://${widget.env}apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
     });
   }
 
@@ -158,17 +171,16 @@ class _WebViewPageState extends State<WebViewPage> {
         content: "Do you want to retry?",
         noButtonText: "Exit",
         yesButtonText: "Retry",
-        onYesPressed: (Completer<bool> completer) {
-          _controller.loadUrl(
-              'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1');
+        onYesPressed: (Completer<bool> completer) async {
+          stopFunctionCalls();
           currentUrl =
-              'https://${widget.env}-checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+              'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+          await _controller.loadUrl(currentUrl);
           startFunctionCalls();
-          isFlagSet = false;
           Future.delayed(const Duration(seconds: 1), () {
+            isFlagSet = false;
             Navigator.of(context).pop();
           });
-
           completer.complete(true);
         },
         onNoPressed: (Completer<bool> completer) {
@@ -185,9 +197,6 @@ class _WebViewPageState extends State<WebViewPage> {
     setState(() {
       backUrl = prefs.getString('backurl') ?? '';
     });
-    setState(() {
-      returnUrl = prefs.getString('returnurl') ?? '';
-    });
   }
 
   void fetchStatusAndReason(String url) async {
@@ -197,17 +206,18 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        if (status.toUpperCase().contains("APPROVED") ||
+        print("status: $status");
+        if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
-                .toUpperCase()
-                .contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
-            statusReason.toUpperCase().contains("APPROVED BY PSP") ||
-            status.toUpperCase().contains("PAID")) {
-          widget.onPaymentResult(PaymentResultObject("SUCCESS"));
+                ?.toUpperCase()
+                ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
+            statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
+            status?.toUpperCase()?.contains("PAID")) {
+          widget.onPaymentResult(PaymentResultObject("Success"));
           job?.cancel();
           stopFunctionCalls();
-        } else if (status.toUpperCase().contains("PENDING")) {
-        } else if (status.toUpperCase().contains("EXPIRED")) {
+        } else if (status?.toUpperCase().contains("PENDING")) {
+        } else if (status?.toUpperCase().contains("EXPIRED")) {
           showDialog(
               context: context,
               builder: (BuildContext context) {
@@ -247,8 +257,8 @@ class _WebViewPageState extends State<WebViewPage> {
                   ],
                 );
               });
-        } else if (status.toUpperCase().contains("PROCESSING")) {
-        } else if (status.toUpperCase().contains("FAILED")) {
+        } else if (status?.toUpperCase().contains("PROCESSING")) {
+        } else if (status?.toUpperCase().contains("FAILED")) {
           // handlePaymentFailure(context);
         }
       } else {}

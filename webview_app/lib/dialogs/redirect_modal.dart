@@ -31,7 +31,8 @@ Future<bool> redirectModal(
                     onNoPressed(completer);
                     Navigator.of(context).pop(false);
                   },
-                  child: Text(noButtonText),
+                  child: Text(noButtonText,
+                  style: const TextStyle(color: Colors.black)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -53,7 +54,8 @@ Future<bool> redirectModal(
                     onNoPressed(completer);
                     Navigator.of(context).pop(false);
                   },
-                  child: Text(noButtonText),
+                  child: Text(noButtonText,
+                  style: const TextStyle(color: Colors.black)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -112,7 +114,7 @@ Future<bool> redirectModal(
                   ),
                   child: Text(
                     noButtonText,
-                    style: TextStyle(fontFamily: font, color: buttonTextColor),
+                    style: TextStyle(fontFamily: font, color: Colors.black),
                   ),
                 ),
                 ElevatedButton(
