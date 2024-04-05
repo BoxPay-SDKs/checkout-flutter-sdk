@@ -134,15 +134,11 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void initSmsListener() async {
-    print("Started Listening for sms");
     String? comingSms;
     try {
-      print("Inside try");
       comingSms = await AltSmsAutofill().listenForSms;
-      print("commingSms $comingSms");
     } on PlatformException {
       comingSms = 'Failed to get Sms.';
-      print("commingSms $comingSms");
     }
     if (!mounted || comingSms == null) return;
 
@@ -152,7 +148,6 @@ class _WebViewPageState extends State<WebViewPage> {
 
       if (matches.isNotEmpty) {
         String otp = matches.first.group(0)!; // Extracting the first match
-        print("OTP: $otp");
         // ignore: deprecated_member_use
         _controller.evaluateJavascript('''
       var otpField = document.querySelector('input[type="text"][autocomplete="one-time-code"], input[type="number"][autocomplete="one-time-code"], input[type="tel"][autocomplete="one-time-code"]');
@@ -162,7 +157,6 @@ class _WebViewPageState extends State<WebViewPage> {
         
         alert('OTP field filled successfully');
       } else {
-        print('OTP field not found');
         alert('OTP field not found');
       }
     ''');
@@ -253,7 +247,6 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        print("status: $status");
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
