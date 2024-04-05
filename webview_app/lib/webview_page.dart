@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_app/custom_appbar.dart';
 import 'package:webview_app/dialogs/redirect_modal.dart';
@@ -7,6 +8,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 
 Timer? job;
 bool isFlagSet = false;
@@ -40,12 +42,20 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   @override
+  void dispose() {
+    stopFunctionCalls();
+    AltSmsAutofill().unregisterListener();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         if (currentUrl.contains(backUrl) ||
-            currentUrl.contains('privacy') || currentUrl.contains('terms-conditions')) {
+            currentUrl.contains('privacy') ||
+            currentUrl.contains('terms-conditions')) {
           return redirectModal(context,
               title: "Confirmation",
               content: "Are you sure you want to go back?",
@@ -67,7 +77,6 @@ class _WebViewPageState extends State<WebViewPage> {
               yesButtonText: "Yes, cancel",
               onNoPressed: (Completer<bool> completer) {
             completer.complete(false);
-            stopFunctionCalls();
           }, onYesPressed: (Completer<bool> completer) {
             currentUrl =
                 'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
@@ -76,7 +85,6 @@ class _WebViewPageState extends State<WebViewPage> {
           });
         } else {
           Navigator.of(context).pop();
-          stopFunctionCalls();
           return true;
         }
       },
@@ -91,6 +99,7 @@ class _WebViewPageState extends State<WebViewPage> {
               _controller = webViewController;
               currentUrl =
                   'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
+              initSmsListener();
             },
             onPageStarted: (String url) {
               setState(() {
@@ -122,6 +131,45 @@ class _WebViewPageState extends State<WebViewPage> {
         ),
       ),
     );
+  }
+
+  void initSmsListener() async {
+    print("Started Listening for sms");
+    String? comingSms;
+    try {
+      print("Inside try");
+      comingSms = await AltSmsAutofill().listenForSms;
+      print("commingSms $comingSms");
+    } on PlatformException {
+      comingSms = 'Failed to get Sms.';
+      print("commingSms $comingSms");
+    }
+    if (!mounted || comingSms == null) return;
+
+    if (comingSms.isNotEmpty) {
+      RegExp regex = RegExp(r'\b\d{4}\b|\b\d{6}\b');
+      Iterable<Match> matches = regex.allMatches(comingSms);
+
+      if (matches.isNotEmpty) {
+        String otp = matches.first.group(0)!; // Extracting the first match
+        print("OTP: $otp");
+        // ignore: deprecated_member_use
+        _controller.evaluateJavascript('''
+      var otpField = document.querySelector('input[type="text"][autocomplete="one-time-code"], input[type="number"][autocomplete="one-time-code"], input[type="tel"][autocomplete="one-time-code"]');
+      if (otpField) {
+        
+        otpField.value = '$otp';
+        
+        alert('OTP field filled successfully');
+      } else {
+        print('OTP field not found');
+        alert('OTP field not found');
+      }
+    ''');
+      } else {
+        print("No OTP found in the message.");
+      }
+    }
   }
 
   void startFunctionCalls() {
@@ -172,7 +220,6 @@ class _WebViewPageState extends State<WebViewPage> {
         noButtonText: "Exit",
         yesButtonText: "Retry",
         onYesPressed: (Completer<bool> completer) async {
-          stopFunctionCalls();
           currentUrl =
               'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
           await _controller.loadUrl(currentUrl);

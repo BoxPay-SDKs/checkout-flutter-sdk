@@ -43,14 +43,13 @@ class BoxPayCheckout {
     String apienv;
     if (sandboxEnabled) {
       apienv = "sandbox";
-    }
-    else{
+    } else {
       apienv = "test";
     }
-    final apiUrl = 'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
+    final apiUrl =
+        'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
-      print(response);
       if (response.statusCode == 200) {
         return response.body;
       } else {
