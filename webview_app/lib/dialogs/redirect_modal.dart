@@ -79,7 +79,7 @@ Future<bool> redirectModal(
                         radix: 16) +
                     0xFF000000)
                 : const Color.fromARGB(255, 121, 157, 240);
-            final secondaryButtonColor = Color.fromARGB(255, 249, 249, 249);
+            const secondaryButtonColor = Color.fromARGB(255, 249, 249, 249);
             final buttonTextColor = buttonTextColorValue != null
                 ? Color(
                     int.parse(buttonTextColorValue.substring(1), radix: 16) +
@@ -87,7 +87,7 @@ Future<bool> redirectModal(
                 : Colors.black;
 
             final titlecolor =
-                title == "Payment Failed" ? Color.fromARGB(255, 199, 33, 21) : Colors.black;
+                title == "Payment Failed" ? const Color.fromARGB(255, 199, 33, 21) : Colors.black;
             return AlertDialog(
               title: Text(
                 title,

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const CustomAppBar({Key? key, required this.title}) : super(key: key);
+  const CustomAppBar({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               if (actions.isNotEmpty) ...[
                 actions[0], 
-                SizedBox(width: 8), 
+                const SizedBox(width: 8), 
               ],
               Text(
                 merchantName,

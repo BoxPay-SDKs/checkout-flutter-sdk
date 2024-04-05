@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest() async {
     final url = Uri.parse(
-        "https://sandbox-apis.boxpay.tech/v0/merchants/gG4azzRSLu/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/hK3JrVc6ys/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer 67mNiuo6eftyAoLUfipZGmfSiZhyiXwa5nPTC7zhfwmmhEsLaqBXzZg5ivn6haNWlmYAoYKxaaANreuyGZ08i2'
+          'Bearer afcGgCv6mOVIIpnFPWBL44RRciVU8oMteV5ZhC2nwjjjuw8z0obKMjdK8ShcwLOU6uRNjQryLKl1pLAsLAXSI'
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -80,8 +80,7 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendReturnUrl":
-          "https://www.boxpay.tech",
+      "frontendReturnUrl": "https://www.boxpay.tech",
       "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/"
     };
     try {
@@ -94,7 +93,8 @@ class Client {
             context: context,
             token: tokenFetched,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: true);
+            // sandboxEnabled: true
+            );
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
@@ -112,7 +112,7 @@ class Client {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ThankYouPage()),
+        MaterialPageRoute(builder: (context) => const ThankYouPage()),
       );
     }
   }
