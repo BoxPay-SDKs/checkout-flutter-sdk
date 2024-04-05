@@ -157,13 +157,7 @@ class _WebViewPageState extends State<WebViewPage> {
         _controller.evaluateJavascript('''
       var otpField = document.querySelector('input[type="text"][autocomplete="one-time-code"], input[type="number"][autocomplete="one-time-code"], input[type="tel"][autocomplete="one-time-code"]');
       if (otpField) {
-        
         otpField.value = '$otp';
-        
-        alert('OTP field filled successfully');
-      } else {
-        print('OTP field not found');
-        alert('OTP field not found');
       }
     ''');
       } else {
