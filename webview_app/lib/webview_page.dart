@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 
 Timer? job;
+Timer? otpTimer;
 bool isFlagSet = false;
 
 class WebViewPage extends StatefulWidget {
@@ -32,6 +33,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late WebViewController _controller;
   String currentUrl = '';
   late String backUrl = '';
+  String otp = '';
 
   @override
   void initState() {
@@ -39,12 +41,14 @@ class _WebViewPageState extends State<WebViewPage> {
     startFunctionCalls();
     isFlagSet = false;
     fetchReturnUrl();
+    otp = '';
   }
 
   @override
   void dispose() {
     stopFunctionCalls();
     AltSmsAutofill().unregisterListener();
+    otpTimer?.cancel();
     super.dispose();
   }
 
@@ -82,6 +86,8 @@ class _WebViewPageState extends State<WebViewPage> {
                 'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hui=1&hmh=1';
             _controller.loadUrl(currentUrl);
             completer.complete(false);
+            otpTimer?.cancel();
+            initSmsListener();
           });
         } else {
           Navigator.of(context).pop();
@@ -106,11 +112,23 @@ class _WebViewPageState extends State<WebViewPage> {
                 currentUrl = url;
               });
             },
-            onPageFinished: (String url) {
+            onPageFinished: (String url) async {
               setState(() {
                 currentUrl = url;
               });
             },
+            // ignore: prefer_collection_literals
+            javascriptChannels: <JavascriptChannel>[
+              JavascriptChannel(
+                name: 'OTPChannel',
+                onMessageReceived: (JavascriptMessage message) {
+                  if (message.message == 'stopOTPTimer') {
+                    otpTimer?.cancel();
+                    print("Timer Stopped");
+                  }
+                },
+              )
+            ].toSet(),
             javascriptMode: JavascriptMode.unrestricted,
             navigationDelegate: (NavigationRequest request) async {
               currentUrl = request.url;
@@ -134,15 +152,12 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void initSmsListener() async {
-    print("Started Listening for sms");
+    print("listener started");
     String? comingSms;
     try {
-      print("Inside try");
       comingSms = await AltSmsAutofill().listenForSms;
-      print("commingSms $comingSms");
     } on PlatformException {
       comingSms = 'Failed to get Sms.';
-      print("commingSms $comingSms");
     }
     if (!mounted || comingSms == null) return;
 
@@ -151,23 +166,30 @@ class _WebViewPageState extends State<WebViewPage> {
       Iterable<Match> matches = regex.allMatches(comingSms);
 
       if (matches.isNotEmpty) {
-        String otp = matches.first.group(0)!; // Extracting the first match
-        print("OTP: $otp");
-        // ignore: deprecated_member_use
-        _controller.evaluateJavascript('''
-      var otpField = document.querySelector('input[type="text"][autocomplete="one-time-code"], input[type="number"][autocomplete="one-time-code"], input[type="tel"][autocomplete="one-time-code"]');
-      if (otpField) {
-        otpField.value = '$otp';
-      }
-    ''');
-      } else {
-        print("No OTP found in the message.");
+        otp = matches.first.group(0)!;
+        print("OTP : $otp");
+        _injectOtp();
       }
     }
   }
 
+  void _injectOtp() {
+    otpTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
+      if (otp.isNotEmpty) {
+        // ignore: deprecated_member_use
+        await _controller.evaluateJavascript('''
+            var otpField = document.querySelector('input');
+            if (otpField) {
+              otpField.value = '$otp';
+            }
+          ''');
+        print("javascript run $otp");
+      }
+    });
+  }
+
   void startFunctionCalls() {
-    job = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
+    job = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
       fetchStatusAndReason(
           "https://${widget.env}apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
     });
@@ -223,6 +245,8 @@ class _WebViewPageState extends State<WebViewPage> {
             Navigator.of(context).pop();
           });
           completer.complete(true);
+          otpTimer?.cancel();
+          initSmsListener();
         },
         onNoPressed: (Completer<bool> completer) {
           Navigator.of(context).pop();

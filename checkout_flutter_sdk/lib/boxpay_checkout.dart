@@ -27,7 +27,7 @@ class BoxPayCheckout {
     final backurl = extractBackURL(responseData);
     await storeMerchantDetailsAndReturnUrlInSharedPreferences(
         merchantDetails, backurl);
-
+  
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => WebViewPage(
@@ -72,11 +72,11 @@ class BoxPayCheckout {
 
   Future<void> storeMerchantDetailsAndReturnUrlInSharedPreferences(
     Map<String, dynamic> merchantDetails,
-    String beckurl,
+    String backurl,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final merchantDetailsJson = jsonEncode(merchantDetails);
     await prefs.setString('merchant_details', merchantDetailsJson);
-    await prefs.setString('backurl', beckurl);
+    await prefs.setString('backurl', backurl);
   }
 }
