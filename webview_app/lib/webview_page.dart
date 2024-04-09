@@ -117,18 +117,6 @@ class _WebViewPageState extends State<WebViewPage> {
                 currentUrl = url;
               });
             },
-            // ignore: prefer_collection_literals
-            javascriptChannels: <JavascriptChannel>[
-              JavascriptChannel(
-                name: 'OTPChannel',
-                onMessageReceived: (JavascriptMessage message) {
-                  if (message.message == 'stopOTPTimer') {
-                    otpTimer?.cancel();
-                    print("Timer Stopped");
-                  }
-                },
-              )
-            ].toSet(),
             javascriptMode: JavascriptMode.unrestricted,
             navigationDelegate: (NavigationRequest request) async {
               currentUrl = request.url;
@@ -152,7 +140,6 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void initSmsListener() async {
-    print("listener started");
     String? comingSms;
     try {
       comingSms = await AltSmsAutofill().listenForSms;
@@ -167,7 +154,6 @@ class _WebViewPageState extends State<WebViewPage> {
 
       if (matches.isNotEmpty) {
         otp = matches.first.group(0)!;
-        print("OTP : $otp");
         _injectOtp();
       }
     }
@@ -183,7 +169,6 @@ class _WebViewPageState extends State<WebViewPage> {
               otpField.value = '$otp';
             }
           ''');
-        print("javascript run $otp");
       }
     });
   }
@@ -271,7 +256,6 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        print("status: $status");
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
