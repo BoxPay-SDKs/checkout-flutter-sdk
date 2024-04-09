@@ -14,12 +14,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return AppBar(
-            backgroundColor: Color.fromARGB(255, 14, 93, 158),
+            backgroundColor: const Color.fromARGB(255, 14, 93, 158),
             title: Text(title),
           );
         } else if (snapshot.hasError) {
           return AppBar(
-            backgroundColor: Color.fromARGB(255, 14, 93, 158),
+            backgroundColor: const Color.fromARGB(255, 14, 93, 158),
             title: Text(title),
           );
         } else {

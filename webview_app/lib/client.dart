@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest() async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/hK3JrVc6ys/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/gZOlwkSlVe/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer afcGgCv6mOVIIpnFPWBL44RRciVU8oMteV5ZhC2nwjjjuw8z0obKMjdK8ShcwLOU6uRNjQryLKl1pLAsLAXSI'
+          'Bearer XyUQOoLDgHlgxAojYhY22ev4P6icr94XIMkxrISZFQnAZIOueM4WbFAWGDc0Q6jPcWBkCXfXWpvRlHoQ5fl20d'
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -26,7 +26,7 @@ class Client {
         "orderId": "test12"
       },
       "paymentType": "S",
-      "money": {"amount": "30", "currencyCode": "INR"},
+      "money": {"amount": "1", "currencyCode": "INR"},
       "descriptor": {"line1": "Some descriptor"},
       "billingAddress": {
         "address1": "first address line",
@@ -52,11 +52,11 @@ class Client {
         }
       },
       "order": {
-        "originalAmount": 10,
-        "shippingAmount": 10,
+        "originalAmount": 3,
+        "shippingAmount": 1,
         "voucherCode": "VOUCHER",
-        "taxAmount": 10,
-        "totalAmountWithoutTax": 20,
+        "taxAmount": 1,
+        "totalAmountWithoutTax": 4,
         "items": [
           {
             "id": "test",
@@ -70,8 +70,46 @@ class Client {
             "imageUrl":
                 "https://www.kasandbox.org/programming-images/avatars/old-spice-man.png",
             "categories": null,
-            "amountWithoutTax": 10,
-            "taxAmount": 10,
+            "amountWithoutTax": 1,
+            "taxAmount": 0,
+            "taxPercentage": null,
+            "discountedAmount": null,
+            "amountWithoutTaxLocale": "10",
+            "amountWithoutTaxLocaleFull": "10"
+          },
+          {
+            "id": "test2",
+            "itemName": "test_name",
+            "description": "testProduct",
+            "quantity": 1,
+            "manufacturer": null,
+            "brand": null,
+            "color": null,
+            "productUrl": null,
+            "imageUrl":
+                "https://picsum.photos/200",
+            "categories": null,
+            "amountWithoutTax": 1,
+            "taxAmount": 0,
+            "taxPercentage": null,
+            "discountedAmount": null,
+            "amountWithoutTaxLocale": "10",
+            "amountWithoutTaxLocaleFull": "10"
+          },
+          {
+            "id": "test3",
+            "itemName": "test_name",
+            "description": "testProduct",
+            "quantity": 1,
+            "manufacturer": null,
+            "brand": null,
+            "color": null,
+            "productUrl": null,
+            "imageUrl":
+                "https://picsum.photos/id/20/200",
+            "categories": null,
+            "amountWithoutTax": 1,
+            "taxAmount": 0,
             "taxPercentage": null,
             "discountedAmount": null,
             "amountWithoutTaxLocale": "10",
