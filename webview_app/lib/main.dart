@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Checkout View',
       theme: ThemeData(primarySwatch: Colors.teal),
       home: const MyHomePage(), // Set MyHomePage as the home page
