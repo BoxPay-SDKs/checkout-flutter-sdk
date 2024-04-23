@@ -21,15 +21,19 @@ class WebViewPage extends StatefulWidget {
   final String token;
   final Function(PaymentResultObject) onPaymentResult;
   final String env;
+  final String upiApps;
+  final String referrer;
 
   const WebViewPage(
       {super.key,
       required this.token,
       required this.onPaymentResult,
-      required this.env});
+      required this.env,
+      required this.upiApps,
+      required this.referrer});
 
   @override
-  State<WebViewPage> createState() => _WebViewPageState();
+  State<WebViewPage> createState() => _WebViewPageState(referrer: referrer);
 }
 
 class _WebViewPageState extends State<WebViewPage> {
@@ -38,10 +42,21 @@ class _WebViewPageState extends State<WebViewPage> {
   late String backUrl = '';
   String otp = '';
   bool _isFirstRender = true;
+  late Map<String, String> headers;
+  String baseUrl = "";
+
+  _WebViewPageState({required String referrer}) {
+    headers = {
+      // 'referrer': referrer,
+      'Referer': referrer,
+      'Origin': referrer
+    };
+  }
 
   @override
   void initState() {
     super.initState();
+    createBaseUrl();
     startFunctionCalls();
     isFlagSet = false;
     _isFirstRender = true;
@@ -55,6 +70,16 @@ class _WebViewPageState extends State<WebViewPage> {
     AltSmsAutofill().unregisterListener();
     otpTimer?.cancel();
     super.dispose();
+  }
+
+  void createBaseUrl() {
+    if (widget.upiApps.isNotEmpty) {
+      baseUrl =
+          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1&${widget.upiApps}';
+    } else {
+      baseUrl =
+          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
+    }
   }
 
   @override
@@ -72,9 +97,8 @@ class _WebViewPageState extends State<WebViewPage> {
               yesButtonText: "Stay", onYesPressed: (Completer<bool> completer) {
             completer.complete(false);
           }, onNoPressed: (Completer<bool> completer) {
-            currentUrl =
-                'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-            _controller.loadUrl(currentUrl);
+            currentUrl = baseUrl;
+            _controller.loadUrl(currentUrl, headers: headers);
             completer.complete(false);
           });
         } else if (!currentUrl.contains('hmh')) {
@@ -87,9 +111,8 @@ class _WebViewPageState extends State<WebViewPage> {
               onNoPressed: (Completer<bool> completer) {
             completer.complete(false);
           }, onYesPressed: (Completer<bool> completer) {
-            currentUrl =
-                'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-            _controller.loadUrl(currentUrl);
+            currentUrl = baseUrl;
+            _controller.loadUrl(currentUrl, headers: headers);
             completer.complete(false);
             otpTimer?.cancel();
             initSmsListener();
@@ -103,60 +126,65 @@ class _WebViewPageState extends State<WebViewPage> {
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: const CustomAppBar(title: 'Checkout'),
         body: SafeArea(
-            child: Stack(
-          children: [
-            WebView(
-              initialUrl:
-                  'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1',
-              onWebViewCreated: (WebViewController webViewController) {
-                _controller = webViewController;
-                currentUrl =
-                    'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-                initSmsListener();
-              },
-              onPageStarted: (String url) {
-                setState(() {
-                  currentUrl = url;
-                });
-              },
-              onPageFinished: (String url) async {
-                setState(() {
-                  currentUrl = url;
-                });
-                await Future.delayed(
-                    Duration(milliseconds: 200)); // Delay for 1 second
-                setState(() {
-                  _isFirstRender = false;
-                });
-              },
-              javascriptMode: JavascriptMode.unrestricted,
-              navigationDelegate: (NavigationRequest request) async {
-                currentUrl = request.url;
-                print("navigation url $currentUrl");
-                if (currentUrl.contains("pns")) {
-                  handlePaymentFailure(context);
-                } else if (currentUrl.contains("pay?") &&
-                    currentUrl.contains("pa")) {
-                  launchUPIIntentURL(currentUrl);
-                  return NavigationDecision.prevent;
-                } else if (currentUrl == 'https://www.boxpay.tech/') {
-                  currentUrl =
-                      'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-                  await _controller.loadUrl(currentUrl);
-                  return NavigationDecision.prevent;
-                } else if (currentUrl.contains(backUrl)) {
-                  Navigator.of(context).pop();
-                  return NavigationDecision.prevent;
-                }
-                return NavigationDecision.navigate;
-              },
-            ),
-            if (_isFirstRender)
-              const Center(
-                child: LoaderSheet(),
+          child: Stack(
+            children: [
+              WebView(
+                onWebViewCreated: (WebViewController webViewController) {
+                  webViewController.loadUrl(baseUrl, headers: headers);
+                  _controller = webViewController;
+                  currentUrl = baseUrl;
+                  initSmsListener();
+                },
+                javascriptChannels: <JavascriptChannel>{
+                  JavascriptChannel(
+                      name: 'otpMessage',
+                      onMessageReceived: (JavascriptMessage message) {
+                        if (message.message == "Success") {
+                          otpTimer!.cancel();
+                        }
+                      })
+                },
+                onPageStarted: (String url) {
+                  setState(() {
+                    currentUrl = url;
+                  });
+                },
+                onPageFinished: (String url) async {
+                  setState(() {
+                    currentUrl = url;
+                  });
+                  await Future.delayed(const Duration(milliseconds: 200));
+                  setState(() {
+                    _isFirstRender = false;
+                  });
+                },
+                javascriptMode: JavascriptMode.unrestricted,
+                navigationDelegate: (NavigationRequest request) async {
+                  currentUrl = request.url;
+                  if (currentUrl.contains("pns")) {
+                    handlePaymentFailure(context);
+                  } else if (currentUrl.contains("pay?") &&
+                      currentUrl.contains("pa")) {
+                    launchUPIIntentURL(currentUrl);
+                    return NavigationDecision.prevent;
+                  } else if (currentUrl == 'https://www.boxpay.tech/') {
+                    currentUrl = baseUrl;
+                    await _controller.loadUrl(currentUrl, headers: headers);
+                    return NavigationDecision.prevent;
+                  } else if (currentUrl.contains(backUrl)) {
+                    Navigator.of(context).pop();
+                    return NavigationDecision.prevent;
+                  }
+                  return NavigationDecision.navigate;
+                },
               ),
-          ],
-        )),
+              if (_isFirstRender)
+                const Center(
+                  child: LoaderSheet(),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -166,13 +194,12 @@ class _WebViewPageState extends State<WebViewPage> {
     if (await canLaunch(upiURL)) {
       // ignore: deprecated_member_use
       await launch(upiURL);
-      await Future.delayed(Duration(milliseconds: 100));
-      while (WidgetsBinding.instance.lifecycleState !=
-          AppLifecycleState.resumed) {
-        await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
+      while (
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-      currentUrl =
-          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
+      currentUrl = baseUrl;
     } else {
       throw 'Could not launch $upiURL';
     }
@@ -188,7 +215,7 @@ class _WebViewPageState extends State<WebViewPage> {
     if (!mounted || comingSms == null) return;
 
     if (comingSms.isNotEmpty) {
-      RegExp regex = RegExp(r'\b\d{4}\b|\b\d{6}\b');
+      RegExp regex = RegExp(r'\b\d{6}\b');
       Iterable<Match> matches = regex.allMatches(comingSms);
 
       if (matches.isNotEmpty) {
@@ -203,11 +230,24 @@ class _WebViewPageState extends State<WebViewPage> {
       if (otp.isNotEmpty) {
         // ignore: deprecated_member_use
         await _controller.evaluateJavascript('''
-            var otpField = document.querySelector('input');
-            if (otpField) {
-              otpField.value = '$otp';
+            var inputField = document.querySelector('input');
+            var submitButton = document.querySelector('button[type="submit"]');
+
+            if (inputField) {
+                inputField.value = '$otp';
+
+                if (submitButton) {
+                    if (submitButton.disabled) {
+                        submitButton.disabled = false;
+                    }
+                    submitButton.click();
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 1700); 
+                }
+            } else {
             }
-          ''');
+        ''');
       }
     });
   }
@@ -260,9 +300,8 @@ class _WebViewPageState extends State<WebViewPage> {
         noButtonText: "Exit",
         yesButtonText: "Retry",
         onYesPressed: (Completer<bool> completer) async {
-          currentUrl =
-              'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-          await _controller.loadUrl(currentUrl);
+          currentUrl = baseUrl;
+          await _controller.loadUrl(currentUrl, headers: headers);
           startFunctionCalls();
           Future.delayed(const Duration(seconds: 1), () {
             isFlagSet = false;
@@ -295,7 +334,6 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
-        print("Status: $status");
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
@@ -348,7 +386,7 @@ class _WebViewPageState extends State<WebViewPage> {
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
         } else if (status?.toUpperCase().contains("FAILED")) {
-          handlePaymentFailure(context);
+          // handlePaymentFailure(context);
         }
       } else {}
     } catch (e) {

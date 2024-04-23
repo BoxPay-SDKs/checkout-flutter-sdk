@@ -25,6 +25,10 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
+              contentPadding: const EdgeInsets.fromLTRB(
+                  24, 16, 24, 16),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -32,7 +36,7 @@ Future<bool> redirectModal(
                     Navigator.of(context).pop(false);
                   },
                   child: Text(noButtonText,
-                  style: const TextStyle(color: Colors.black)),
+                      style: const TextStyle(color: Colors.black)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -48,6 +52,10 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
+              contentPadding: const EdgeInsets.fromLTRB(
+                  24, 16, 24, 16),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -55,7 +63,7 @@ Future<bool> redirectModal(
                     Navigator.of(context).pop(false);
                   },
                   child: Text(noButtonText,
-                  style: const TextStyle(color: Colors.black)),
+                      style: const TextStyle(color: Colors.black)),
                 ),
                 TextButton(
                   onPressed: () {
@@ -86,52 +94,98 @@ Future<bool> redirectModal(
                         0xFF000000)
                 : Colors.black;
 
-            final titlecolor =
-                title == "Payment Failed" ? const Color.fromARGB(255, 199, 33, 21) : Colors.black;
+            final titlecolor = title == "Payment Failed"
+                ? const Color.fromARGB(255, 199, 33, 21)
+                : Colors.black;
             return AlertDialog(
-              title: Text(
-                title,
-                style: TextStyle(
-                  color: titlecolor,
-                  fontFamily: font,
-                ),
-              ),
-              content: Text(
-                content,
-                style: TextStyle(fontFamily: font),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: titlecolor, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: titlecolor,
+                          fontFamily: font,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 32),
+                    child: Text(
+                      content,
+                      style: TextStyle(fontFamily: font, fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
               backgroundColor: Colors.white,
+              contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
-                FilledButton(
-                  onPressed: () {
-                    onNoPressed(completer); // Pass completer to the function
-                    Navigator.of(context).pop(true);
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                      secondaryButtonColor,
+                Padding(
+                  padding: EdgeInsets.zero,
+                  child: FilledButton(
+                    onPressed: () {
+                      onNoPressed(completer);
+                      Navigator.of(context).pop(true);
+                    },
+                    style: ButtonStyle(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)))),
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        secondaryButtonColor,
+                      ),
+                      elevation:
+                          MaterialStateProperty.all<double>(2),
+                      shadowColor: MaterialStateProperty.all<Color>(
+                          Colors.black.withOpacity(0.04)),
                     ),
-                  ),
-                  child: Text(
-                    noButtonText,
-                    style: TextStyle(fontFamily: font, color: Colors.black),
+                    child: Text(
+                      noButtonText,
+                      style: TextStyle(fontFamily: font, color: Colors.black),
+                    ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    onYesPressed(completer);
-                    Navigator.of(context).pop(false);
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                      primaryButtonColor,
+                Padding(
+                  padding: EdgeInsets.zero,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      onYesPressed(completer);
+                      Navigator.of(context).pop(false);
+                    },
+                    style: ButtonStyle(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)))),
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        primaryButtonColor,
+                      ),
+                      elevation:
+                          MaterialStateProperty.all<double>(2),
+                      shadowColor: MaterialStateProperty.all<Color>(
+                          Colors.black.withOpacity(0.04)),
+                    ),
+                    child: Text(
+                      yesButtonText,
+                      style:
+                          TextStyle(fontFamily: font, color: buttonTextColor),
                     ),
                   ),
-                  child: Text(
-                    yesButtonText,
-                    style: TextStyle(fontFamily: font, color: buttonTextColor),
-                  ),
-                  
                 ),
               ],
             );
