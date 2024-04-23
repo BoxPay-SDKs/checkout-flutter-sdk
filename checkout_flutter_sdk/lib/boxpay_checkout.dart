@@ -20,7 +20,7 @@ class BoxPayCheckout {
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
-        env = sandboxEnabled == true ? "sandbox-" : "test-";
+        env = sandboxEnabled == true ? "sandbox-" : "prod";
 
   Future<void> display() async {
     final responseData = await fetchSessionDataFromApi(token);
@@ -74,7 +74,7 @@ class BoxPayCheckout {
     if (sandboxEnabled) {
       apienv = "sandbox";
     } else {
-      apienv = "test";
+      apienv = "prod";
     }
     final apiUrl =
         'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
