@@ -1,12 +1,11 @@
 import 'dart:async';
+import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_app/payment_result_object.dart';
 import 'package:webview_app/webview_page.dart';
-
 
 class BoxPayCheckout {
   final BuildContext context;
@@ -30,17 +29,19 @@ class BoxPayCheckout {
     final backurl = extractBackURL(responseData);
 
     List<String> foundApps = [];
-    bool isGooglePayInstalled =
+
+    final isGpayInstalled =
         await isAppInstalled('com.google.android.apps.nbu.paisa.user');
-    bool isPaytmInstalled = await isAppInstalled('net.one97.paytm');
-    bool isPhonePeInstalled = await isAppInstalled('com.phonepe.app');
-    if (isGooglePayInstalled) {
+    final isPaytmInstalled = await isAppInstalled('net.one97.paytm');
+    final isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
+
+    if (isGpayInstalled) {
       foundApps.add("gp=1");
     }
     if (isPaytmInstalled) {
       foundApps.add("pm=1");
     }
-    if (isPhonePeInstalled) {
+    if (isPhonepeInstalled) {
       foundApps.add("pp=1");
     }
 
@@ -61,6 +62,11 @@ class BoxPayCheckout {
             referrer: referrer),
       ),
     );
+  }
+
+  Future<bool> isAppInstalled(String packageName) async {
+    final bool isInstalled = await DeviceApps.isAppInstalled(packageName);
+    return isInstalled;
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
@@ -113,15 +119,4 @@ class BoxPayCheckout {
     return '';
   }
 
-  Future<bool> isAppInstalled(String packageName) async {
-    const platform = MethodChannel('app.channel.shared.data');
-    try {
-      final result = await platform.invokeMethod('isAppInstalled', {
-        'package_name': packageName,
-      });
-      return result;
-    } on PlatformException catch (_) {
-      return false;
-    }
-  }
 }
