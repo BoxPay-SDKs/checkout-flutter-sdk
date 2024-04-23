@@ -40,6 +40,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   webview_flutter: ^3.0.4
   url_launcher: ^6.0.9
+  device_apps: ^2.2.0
 
 dev_dependencies:
   flutter_test:
