@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,18 +24,40 @@ class BoxPayCheckout {
 
   Future<void> display() async {
     final responseData = await fetchSessionDataFromApi(token);
+    final referrer = extractReferer(responseData);
     final merchantDetails = extractMerchantDetails(responseData);
     final backurl = extractBackURL(responseData);
+
+    List<String> foundApps = [];
+    bool isGooglePayInstalled =
+        await isAppInstalled('com.google.android.apps.nbu.paisa.user');
+    bool isPaytmInstalled = await isAppInstalled('net.one97.paytm');
+    bool isPhonePeInstalled = await isAppInstalled('com.phonepe.app');
+    if (isGooglePayInstalled) {
+      foundApps.add("gp=1");
+    }
+    if (isPaytmInstalled) {
+      foundApps.add("pm=1");
+    }
+    if (isPhonePeInstalled) {
+      foundApps.add("pp=1");
+    }
+
+    String upiApps = "";
+    if (foundApps.isNotEmpty) {
+      upiApps = foundApps.join('&');
+    }
     await storeMerchantDetailsAndReturnUrlInSharedPreferences(
         merchantDetails, backurl);
-  
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => WebViewPage(
-          token: token,
-          onPaymentResult: onPaymentResult,
-          env: env,
-        ),
+            token: token,
+            onPaymentResult: onPaymentResult,
+            env: env,
+            upiApps: upiApps,
+            referrer: referrer),
       ),
     );
   }
@@ -78,5 +101,26 @@ class BoxPayCheckout {
     final merchantDetailsJson = jsonEncode(merchantDetails);
     await prefs.setString('merchant_details', merchantDetailsJson);
     await prefs.setString('backurl', backurl);
+  }
+
+  String extractReferer(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    final List<dynamic> referers = parsedData['configs']['referrers'];
+    if (referers.isNotEmpty) {
+      return referers[0];
+    }
+    return '';
+  }
+
+  Future<bool> isAppInstalled(String packageName) async {
+    const platform = MethodChannel('app.channel.shared.data');
+    try {
+      final result = await platform.invokeMethod('isAppInstalled', {
+        'package_name': packageName,
+      });
+      return result;
+    } on PlatformException catch (_) {
+      return false;
+    }
   }
 }
