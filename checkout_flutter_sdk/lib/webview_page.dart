@@ -42,6 +42,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late String backUrl = '';
   String otp = '';
   bool _isFirstRender = true;
+  bool _isIntentLaunch = false;
   late Map<String, String> headers;
   String baseUrl = "";
 
@@ -178,7 +179,7 @@ class _WebViewPageState extends State<WebViewPage> {
                   return NavigationDecision.navigate;
                 },
               ),
-              if (_isFirstRender)
+              if (_isFirstRender || _isIntentLaunch)
                 const Center(
                   child: LoaderSheet(),
                 ),
@@ -194,12 +195,18 @@ class _WebViewPageState extends State<WebViewPage> {
     if (await canLaunch(upiURL)) {
       // ignore: deprecated_member_use
       await launch(upiURL);
+      setState(() {
+        _isIntentLaunch = true;
+      });
       await Future.delayed(const Duration(milliseconds: 100));
       while (
           WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
       currentUrl = baseUrl;
+      setState(() {
+        _isIntentLaunch = false;
+      });
     } else {
       throw 'Could not launch $upiURL';
     }
