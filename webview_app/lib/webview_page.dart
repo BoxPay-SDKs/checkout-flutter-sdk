@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,6 +67,7 @@ class _WebViewPageState extends State<WebViewPage> {
     fetchReturnUrl();
     timerModalListener();
     otp = '';
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
   }
 
   @override
@@ -137,71 +139,74 @@ class _WebViewPageState extends State<WebViewPage> {
       child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         appBar: const CustomAppBar(title: 'Checkout'),
+        resizeToAvoidBottomInset: true,
         body: SafeArea(
           child: Stack(
             children: [
-              WebView(
-                onWebViewCreated: (WebViewController webViewController) {
-                  webViewController.loadUrl(baseUrl, headers: headers);
-                  _controller = webViewController;
-                  currentUrl = baseUrl;
-                  initSmsListener();
-                },
-                javascriptChannels: <JavascriptChannel>{
-                  JavascriptChannel(
-                      name: 'otpMessage',
-                      onMessageReceived: (JavascriptMessage message) {
-                        if (message.message == "Success") {
-                          otpTimer!.cancel();
-                        }
-                      }),
-                  JavascriptChannel(
-                      name: 'upiTimerModal',
-                      onMessageReceived: (JavascriptMessage message) {
-                        if (message.message == "true") {
-                          setState(() {
-                            _upiTimerModal = true;
-                          });
-                        } else {
-                          setState(() {
-                            _upiTimerModal = false;
-                          });
-                        }
-                      }),
-                },
-                onPageStarted: (String url) {
-                  setState(() {
-                    currentUrl = url;
-                  });
-                },
-                onPageFinished: (String url) async {
-                  setState(() {
-                    currentUrl = url;
-                  });
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  setState(() {
-                    _isFirstRender = false;
-                  });
-                },
-                javascriptMode: JavascriptMode.unrestricted,
-                navigationDelegate: (NavigationRequest request) async {
-                  currentUrl = request.url;
-                  if (currentUrl.contains("pns")) {
-                    handlePaymentFailure(context);
-                  } else if (currentUrl.contains("pay?") &&
-                      currentUrl.contains("pa")) {
-                    launchUPIIntentURL(currentUrl);
-                    return NavigationDecision.prevent;
-                  } else if (currentUrl == 'https://www.boxpay.tech/') {
+              Scaffold(
+                body: WebView(
+                  onWebViewCreated: (WebViewController webViewController) {
+                    webViewController.loadUrl(baseUrl, headers: headers);
+                    _controller = webViewController;
                     currentUrl = baseUrl;
-                    await _controller.loadUrl(currentUrl, headers: headers);
-                    return NavigationDecision.prevent;
-                  } else if (currentUrl.contains(backUrl)) {
-                    Navigator.of(context).pop();
-                    return NavigationDecision.prevent;
-                  }
-                  return NavigationDecision.navigate;
-                },
+                    initSmsListener();
+                  },
+                  javascriptChannels: <JavascriptChannel>{
+                    JavascriptChannel(
+                        name: 'otpMessage',
+                        onMessageReceived: (JavascriptMessage message) {
+                          if (message.message == "Success") {
+                            otpTimer!.cancel();
+                          }
+                        }),
+                    JavascriptChannel(
+                        name: 'upiTimerModal',
+                        onMessageReceived: (JavascriptMessage message) {
+                          if (message.message == "true") {
+                            setState(() {
+                              _upiTimerModal = true;
+                            });
+                          } else {
+                            setState(() {
+                              _upiTimerModal = false;
+                            });
+                          }
+                        }),
+                  },
+                  onPageStarted: (String url) {
+                    setState(() {
+                      currentUrl = url;
+                    });
+                  },
+                  onPageFinished: (String url) async {
+                    setState(() {
+                      currentUrl = url;
+                    });
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    setState(() {
+                      _isFirstRender = false;
+                    });
+                  },
+                  javascriptMode: JavascriptMode.unrestricted,
+                  navigationDelegate: (NavigationRequest request) async {
+                    currentUrl = request.url;
+                    if (currentUrl.contains("pns")) {
+                      handlePaymentFailure(context);
+                    } else if (currentUrl.contains("pay?") &&
+                        currentUrl.contains("pa")) {
+                      launchUPIIntentURL(currentUrl);
+                      return NavigationDecision.prevent;
+                    } else if (currentUrl == 'https://www.boxpay.tech/') {
+                      currentUrl = baseUrl;
+                      await _controller.loadUrl(currentUrl, headers: headers);
+                      return NavigationDecision.prevent;
+                    } else if (currentUrl.contains(backUrl)) {
+                      Navigator.of(context).pop();
+                      return NavigationDecision.prevent;
+                    }
+                    return NavigationDecision.navigate;
+                  },
+                ),
               ),
               if (_isFirstRender || _isIntentLaunch)
                 const Center(
@@ -239,8 +244,7 @@ class _WebViewPageState extends State<WebViewPage> {
   void timerModalListener() {
     modalCheckTimer =
         Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
-      if (currentUrl.contains("hmh"))
-      {
+      if (currentUrl.contains("hmh")) {
         // ignore: deprecated_member_use
         await _controller.evaluateJavascript('''
               var modal = document.querySelector('.upiModal');
