@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 Timer? job;
 Timer? otpTimer;
+Timer? modalCheckTimer;
 bool isFlagSet = false;
 
 class WebViewPage extends StatefulWidget {
@@ -45,6 +46,7 @@ class _WebViewPageState extends State<WebViewPage> {
   bool _isIntentLaunch = false;
   late Map<String, String> headers;
   String baseUrl = "";
+  bool _upiTimerModal = false;
 
   _WebViewPageState({required String referrer}) {
     headers = {
@@ -62,6 +64,7 @@ class _WebViewPageState extends State<WebViewPage> {
     isFlagSet = false;
     _isFirstRender = true;
     fetchReturnUrl();
+    timerModalListener();
     otp = '';
   }
 
@@ -70,6 +73,7 @@ class _WebViewPageState extends State<WebViewPage> {
     stopFunctionCalls();
     AltSmsAutofill().unregisterListener();
     otpTimer?.cancel();
+    modalCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -102,6 +106,13 @@ class _WebViewPageState extends State<WebViewPage> {
             _controller.loadUrl(currentUrl, headers: headers);
             completer.complete(false);
           });
+        } else if (_upiTimerModal && currentUrl.contains('hmh')) {
+          currentUrl = baseUrl;
+          _controller.loadUrl(currentUrl, headers: headers);
+          setState(() {
+            _upiTimerModal = false;
+          });
+          return false;
         } else if (!currentUrl.contains('hmh')) {
           return redirectModal(context,
               title: "Cancel Payment",
@@ -143,7 +154,20 @@ class _WebViewPageState extends State<WebViewPage> {
                         if (message.message == "Success") {
                           otpTimer!.cancel();
                         }
-                      })
+                      }),
+                  JavascriptChannel(
+                      name: 'upiTimerModal',
+                      onMessageReceived: (JavascriptMessage message) {
+                        if (message.message == "true") {
+                          setState(() {
+                            _upiTimerModal = true;
+                          });
+                        } else {
+                          setState(() {
+                            _upiTimerModal = false;
+                          });
+                        }
+                      }),
                 },
                 onPageStarted: (String url) {
                   setState(() {
@@ -210,6 +234,29 @@ class _WebViewPageState extends State<WebViewPage> {
     } else {
       throw 'Could not launch $upiURL';
     }
+  }
+
+  void timerModalListener() {
+    modalCheckTimer =
+        Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
+      if (currentUrl.contains("hmh"))
+      {
+        // ignore: deprecated_member_use
+        await _controller.evaluateJavascript('''
+              var modal = document.querySelector('.upiModal');
+
+              if(modal){
+                setTimeout(function() {
+                    window.upiTimerModal.postMessage('true');
+                  }, 500);
+              }else{
+                setTimeout(function() {
+                    window.upiTimerModal.postMessage('false');
+                  }, 500);
+              }
+        ''');
+      }
+    });
   }
 
   void initSmsListener() async {
