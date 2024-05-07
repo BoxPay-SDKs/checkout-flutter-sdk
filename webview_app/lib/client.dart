@@ -86,8 +86,8 @@ class Client {
             "brand": null,
             "color": null,
             "productUrl": null,
-            "imageUrl":
-                "https://picsum.photos/200",
+            "imageUrl": 
+                  "https://picsum.photos/id/30/200",
             "categories": null,
             "amountWithoutTax": 1,
             "taxAmount": 0,
