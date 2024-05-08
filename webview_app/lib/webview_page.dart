@@ -103,9 +103,11 @@ class _WebViewPageState extends State<WebViewPage> {
               noButtonText: "Exit Anyway",
               yesButtonText: "Stay", onYesPressed: (Completer<bool> completer) {
             completer.complete(false);
-          }, onNoPressed: (Completer<bool> completer) {
+          }, onNoPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            _controller.loadUrl(currentUrl, headers: headers);
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
             completer.complete(false);
           });
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
@@ -124,12 +126,15 @@ class _WebViewPageState extends State<WebViewPage> {
               yesButtonText: "Yes, cancel",
               onNoPressed: (Completer<bool> completer) {
             completer.complete(false);
-          }, onYesPressed: (Completer<bool> completer) {
+          }, onYesPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            _controller.loadUrl(currentUrl, headers: headers);
-            completer.complete(false);
-            otpTimer?.cancel();
-            initSmsListener();
+            // _controller.loadUrl(currentUrl, headers: headers);
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
+              completer.complete(false);
+              otpTimer?.cancel();
+              initSmsListener();
           });
         } else {
           Navigator.of(context).pop();
@@ -309,7 +314,7 @@ if(inputFieldWithAutoComplete){
                 }, 1000);
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
         }
         else if (submitButton) {
             if (submitButton.disabled) {
@@ -320,14 +325,14 @@ if(inputFieldWithAutoComplete){
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             }
         }
         
@@ -350,7 +355,7 @@ else if(inputFieldWithPassword){
                 }, 1000);
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
         }
         else if (submitButton) {
             if (submitButton.disabled) {
@@ -361,14 +366,14 @@ else if(inputFieldWithPassword){
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             }
         }
         
@@ -389,7 +394,7 @@ else if (inputField) {
                 }, 1000);
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
         }
         else if (submitButton) {
        
@@ -403,14 +408,14 @@ else if (inputField) {
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
                 setTimeout(function() {
                     window.otpMessage.postMessage('Success');
-                  }, 1700);
+                  }, 700);
             }
         }
        
