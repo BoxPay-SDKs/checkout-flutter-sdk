@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest() async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/k14tskiopy/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/k12aNmllPW/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer tc8v66sgnfxx3oLT4MhUirvA1k1blW32jIK3yHqVFObMjeFtJcXsdhjkDtvJPIhJ6vA68SvQUuLypHFfK9ccJf',
+          'Bearer 72t54rOBQKzlEPddLizUJcZnJJGkm6Ysjy61u8eCtuYywGUhQW3MUivPwW0wmnky3gBQViQo9n6apZcUlXz4h9',
     };
     final Map<String, dynamic> jsonData = {
       "context": {

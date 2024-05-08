@@ -132,9 +132,9 @@ class _WebViewPageState extends State<WebViewPage> {
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
-              completer.complete(false);
-              otpTimer?.cancel();
-              initSmsListener();
+            completer.complete(false);
+            otpTimer?.cancel();
+            initSmsListener();
           });
         } else {
           Navigator.of(context).pop();
@@ -293,26 +293,25 @@ class _WebViewPageState extends State<WebViewPage> {
       if (otp.isNotEmpty) {
         // ignore: deprecated_member_use
         await _controller.evaluateJavascript("""
-            
+            var proceedButtonIDFC = document.querySelector('.btn-idfc-maroon');
             var inputFieldWithPassword = document.querySelector('input[type="password"]');
             var inputFieldWithAutoComplete = document.querySelector('input[autocomplete="one-time-code"]'); 
     var inputField = document.querySelector('input'); // Assuming this is your OTP input field
 var submitButton = document.querySelector('button[type="submit"]');
-
 var submitButtonMainButton = document.querySelector('td.mainbutton a#submitOTP');
+var makePaymentButton = document.querySelector('button[type="button"]');
+
+
 if(inputFieldWithAutoComplete){
     inputFieldWithAutoComplete.type = "text";
  inputFieldWithAutoComplete.value = "$otp";
     setTimeout(function() {
-    
-   
     if(submitButtonMainButton){
         submitButtonMainButton.disabled = false;
-       
                 setTimeout(function() {
                     submitButtonMainButton.click(); // Click the submit button after a delay
                 }, 1000);
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
         }
@@ -323,37 +322,42 @@ if(inputFieldWithAutoComplete){
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             }
         }
-        
-        
         // Change back to password after a delay
         
-    }, 1000); 
+       }, 1800);
     }
 else if(inputFieldWithPassword){
- inputFieldWithPassword.type = "text";
- inputFieldWithPassword.value = "$otp";
+    inputFieldWithPassword.value = "$otp";sdfghh
+ 
     setTimeout(function() {
     
-   
-    if(submitButtonMainButton){
+    if(proceedButtonIDFC){
+    proceedButtonIDFC.disabled = false;
+                setTimeout(function() {
+                    proceedButtonIDFC.click(); // Click the submit button after a delay
+                }, 1000);
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+    }
+    else if(submitButtonMainButton){
         submitButtonMainButton.disabled = false;
-       
                 setTimeout(function() {
                     submitButtonMainButton.click(); // Click the submit button after a delay
                 }, 1000);
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
         }
@@ -364,26 +368,42 @@ else if(inputFieldWithPassword){
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            }
+        }else if(makePaymentButton){
+        if (makePaymentButton.disabled) {
+                // If the submit button is disabled, enable it
+                makePaymentButton.disabled = false;
                 setTimeout(function() {
+                    makePaymentButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            } else {
+                setTimeout(function() {
+                    makePaymentButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             }
         }
         
-        inputFieldWithPassword.type = "password";
         // Change back to password after a delay
         
-    }, 1000); 
+    }, 1800); 
 }
 else if (inputField) {
-    inputField.type = "text";
     inputField.value = "$otp";
     setTimeout(function() {
     if(submitButtonMainButton){
@@ -392,7 +412,7 @@ else if (inputField) {
                 setTimeout(function() {
                     submitButtonMainButton.click(); // Click the submit button after a delay
                 }, 1000);
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
         }
@@ -406,23 +426,22 @@ else if (inputField) {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             } else {
                 setTimeout(function() {
                     submitButton.click(); // Click the submit button after a delay
                 }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
+                  setTimeout(function() {
                     window.otpMessage.postMessage('Success');
                   }, 700);
             }
         }
-       
-        inputField.type = "password";
+      
         // Change back to password after a delay
       
-    }, 1000); // Set the OTP value in the input field after a delay
+    }, 1800); // Set the OTP value in the input field after a delay
 } else {
     // Handle the case where the input field is not found
 }
