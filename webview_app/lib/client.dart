@@ -86,8 +86,7 @@ class Client {
             "brand": null,
             "color": null,
             "productUrl": null,
-            "imageUrl":
-                "https://picsum.photos/200",
+            "imageUrl": "https://picsum.photos/id/30/200",
             "categories": null,
             "amountWithoutTax": 1,
             "taxAmount": 0,
@@ -105,8 +104,7 @@ class Client {
             "brand": null,
             "color": null,
             "productUrl": null,
-            "imageUrl":
-                "https://picsum.photos/id/20/200",
+            "imageUrl": "https://picsum.photos/id/20/200",
             "categories": null,
             "amountWithoutTax": 1,
             "taxAmount": 0,
@@ -127,11 +125,11 @@ class Client {
       if (response.statusCode == 201) {
         final tokenFetched = jsonDecode(response.body)['token'];
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
-            context: context,
-            token: tokenFetched,
-            onPaymentResult: onPaymentResult,
-            // sandboxEnabled: true
-            );
+          context: context,
+          token: tokenFetched,
+          onPaymentResult: onPaymentResult,
+          // sandboxEnabled: true
+        );
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
