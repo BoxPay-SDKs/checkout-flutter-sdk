@@ -6,6 +6,7 @@ import 'package:webview_app/custom_appbar.dart';
 import 'package:webview_app/dialogs/redirect_modal.dart';
 import 'package:webview_app/loader_sheet.dart';
 import 'package:webview_app/payment_result_object.dart';
+import 'package:webview_app/quickpay_sheet.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -48,6 +49,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
+  bool _quickpay = true;
 
   _WebViewPageState({required String referrer}) {
     headers = {
@@ -217,12 +219,41 @@ class _WebViewPageState extends State<WebViewPage> {
                 const Center(
                   child: LoaderSheet(),
                 ),
+                if (_quickpay)
+              Positioned.fill(
+                child: Container(
+                  color: Color.fromARGB(255, 255, 255, 255), // Adjust opacity as needed
+                ),
+              ),
+            if (_quickpay)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white, // Set your desired background color for the bottom sheet
+                  ),
+                  child: BottomSheet(
+                    // Customize this BottomSheet as per your requirements
+                    enableDrag: true,
+                    onClosing: closeQuickpayBottomSheet,
+                    builder: (BuildContext context) {
+                     return QuickpayBottomSheet(onClose: closeQuickpayBottomSheet);
+                    },
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+  
+  void closeQuickpayBottomSheet() {
+  setState(() {
+    _quickpay = false;
+  });
+}
 
   void launchUPIIntentURL(String upiURL) async {
     // ignore: deprecated_member_use
