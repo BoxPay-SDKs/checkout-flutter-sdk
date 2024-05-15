@@ -11,13 +11,13 @@ class Client {
 
   Client(this.context);
 
-  Future<void> makePaymentRequest() async {
+  Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/k12aNmllPW/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/k14tskiopy/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer 72t54rOBQKzlEPddLizUJcZnJJGkm6Ysjy61u8eCtuYywGUhQW3MUivPwW0wmnky3gBQViQo9n6apZcUlXz4h9',
+          'Bearer tc8v66sgnfxx3oLT4MhUirvA1k1blW32jIK3yHqVFObMjeFtJcXsdhjkDtvJPIhJ6vA68SvQUuLypHFfK9ccJf',
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -123,13 +123,19 @@ class Client {
       final response =
           await http.post(url, headers: headers, body: jsonEncode(jsonData));
       if (response.statusCode == 201) {
-        final tokenFetched = jsonDecode(response.body)['token'];
+        var tokenFetched = jsonDecode(response.body)['token'];
+        if (enteredToken != null) {
+          tokenFetched = enteredToken;
+        }
+        bool sandboxflag = false;
+        if (envSelected == "sandbox") {
+          sandboxflag = true;
+        }
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
-          context: context,
-          token: tokenFetched,
-          onPaymentResult: onPaymentResult,
-          // sandboxEnabled: true
-        );
+            context: context,
+            token: tokenFetched,
+            onPaymentResult: onPaymentResult,
+            sandboxEnabled: sandboxflag);
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
