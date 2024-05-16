@@ -76,12 +76,22 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void createBaseUrl() {
-    if (widget.upiApps.isNotEmpty) {
+    if(widget.env == "sandbox-")
+    {if (widget.upiApps.isNotEmpty) {
       baseUrl =
           'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1&${widget.upiApps}';
     } else {
       baseUrl =
           'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
+    }}
+    else{
+      if (widget.upiApps.isNotEmpty) {
+      baseUrl =
+          'https://checkout.boxpay.in/?token=${widget.token}&hmh=1&${widget.upiApps}';
+    } else {
+      baseUrl =
+          'https://checkout.boxpay.in/?token=${widget.token}&hmh=1';
+    }
     }
   }
 
