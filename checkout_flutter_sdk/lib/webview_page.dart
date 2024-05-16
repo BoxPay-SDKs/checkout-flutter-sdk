@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:checkout_flutter_sdk/dialogs/redirect_modal.dart';
 import 'package:checkout_flutter_sdk/loader_sheet.dart';
-import 'package:flutter/services.dart';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'package:checkout_flutter_sdk/custom_appbar.dart';
@@ -16,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 
 Timer? job;
-Timer? otpTimer;
 Timer? modalCheckTimer;
 bool isFlagSet = false;
 
@@ -43,7 +41,6 @@ class _WebViewPageState extends State<WebViewPage> {
   late WebViewController _controller;
   String currentUrl = '';
   late String backUrl = '';
-  String otp = '';
   bool _isFirstRender = true;
   bool _isIntentLaunch = false;
   late Map<String, String> headers;
@@ -67,7 +64,6 @@ class _WebViewPageState extends State<WebViewPage> {
     _isFirstRender = true;
     fetchReturnUrl();
     timerModalListener();
-    otp = '';
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
   }
 
@@ -75,7 +71,6 @@ class _WebViewPageState extends State<WebViewPage> {
   void dispose() {
     stopFunctionCalls();
     AltSmsAutofill().unregisterListener();
-    otpTimer?.cancel();
     modalCheckTimer?.cancel();
     super.dispose();
   }
@@ -104,9 +99,11 @@ class _WebViewPageState extends State<WebViewPage> {
               noButtonText: "Exit Anyway",
               yesButtonText: "Stay", onYesPressed: (Completer<bool> completer) {
             completer.complete(false);
-          }, onNoPressed: (Completer<bool> completer) {
+          }, onNoPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            _controller.loadUrl(currentUrl, headers: headers);
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
             completer.complete(false);
           });
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
@@ -125,12 +122,12 @@ class _WebViewPageState extends State<WebViewPage> {
               yesButtonText: "Yes, cancel",
               onNoPressed: (Completer<bool> completer) {
             completer.complete(false);
-          }, onYesPressed: (Completer<bool> completer) {
+          }, onYesPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            _controller.loadUrl(currentUrl, headers: headers);
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
             completer.complete(false);
-            otpTimer?.cancel();
-            initSmsListener();
           });
         } else {
           Navigator.of(context).pop();
@@ -150,16 +147,8 @@ class _WebViewPageState extends State<WebViewPage> {
                     webViewController.loadUrl(baseUrl, headers: headers);
                     _controller = webViewController;
                     currentUrl = baseUrl;
-                    initSmsListener();
                   },
                   javascriptChannels: <JavascriptChannel>{
-                    JavascriptChannel(
-                        name: 'otpMessage',
-                        onMessageReceived: (JavascriptMessage message) {
-                          if (message.message == "Success") {
-                            otpTimer!.cancel();
-                          }
-                        }),
                     JavascriptChannel(
                         name: 'upiTimerModal',
                         onMessageReceived: (JavascriptMessage message) {
@@ -264,169 +253,6 @@ class _WebViewPageState extends State<WebViewPage> {
     });
   }
 
-  void initSmsListener() async {
-    String? comingSms;
-    try {
-      comingSms = await AltSmsAutofill().listenForSms;
-    } on PlatformException {
-      comingSms = 'Failed to get Sms.';
-    }
-    if (!mounted || comingSms == null) return;
-
-    if (comingSms.isNotEmpty) {
-      RegExp regex = RegExp(r'\b\d{6}\b');
-      Iterable<Match> matches = regex.allMatches(comingSms);
-
-      if (matches.isNotEmpty) {
-        otp = matches.first.group(0)!;
-        _injectOtp();
-      }
-    }
-  }
-
-  void _injectOtp() {
-    otpTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
-      if (otp.isNotEmpty) {
-        // ignore: deprecated_member_use
-        await _controller.evaluateJavascript("""
-            
-            var inputFieldWithPassword = document.querySelector('input[type="password"]');
-            var inputFieldWithAutoComplete = document.querySelector('input[autocomplete="one-time-code"]'); 
-    var inputField = document.querySelector('input'); // Assuming this is your OTP input field
-var submitButton = document.querySelector('button[type="submit"]');
-
-var submitButtonMainButton = document.querySelector('td.mainbutton a#submitOTP');
-if(inputFieldWithAutoComplete){
-    inputFieldWithAutoComplete.type = "text";
- inputFieldWithAutoComplete.value = "$otp";
-    setTimeout(function() {
-    
-   
-    if(submitButtonMainButton){
-        submitButtonMainButton.disabled = false;
-       
-                setTimeout(function() {
-                    submitButtonMainButton.click(); // Click the submit button after a delay
-                }, 1000);
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-        }
-        else if (submitButton) {
-            if (submitButton.disabled) {
-                // If the submit button is disabled, enable it
-                submitButton.disabled = false;
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            } else {
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            }
-        }
-        
-        
-        // Change back to password after a delay
-        
-    }, 1000); 
-    }
-else if(inputFieldWithPassword){
- inputFieldWithPassword.type = "text";
- inputFieldWithPassword.value = "$otp";
-    setTimeout(function() {
-    
-   
-    if(submitButtonMainButton){
-        submitButtonMainButton.disabled = false;
-       
-                setTimeout(function() {
-                    submitButtonMainButton.click(); // Click the submit button after a delay
-                }, 1000);
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-        }
-        else if (submitButton) {
-            if (submitButton.disabled) {
-                // If the submit button is disabled, enable it
-                submitButton.disabled = false;
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            } else {
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            }
-        }
-        
-        inputFieldWithPassword.type = "password";
-        // Change back to password after a delay
-        
-    }, 1000); 
-}
-else if (inputField) {
-    inputField.type = "text";
-    inputField.value = "$otp";
-    setTimeout(function() {
-    if(submitButtonMainButton){
-        submitButtonMainButton.disabled = false;
-       
-                setTimeout(function() {
-                    submitButtonMainButton.click(); // Click the submit button after a delay
-                }, 1000);
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-        }
-        else if (submitButton) {
-       
-        
-            if (submitButton.disabled) {
-                // If the submit button is disabled, enable it
-                submitButton.disabled = false;
-      
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            } else {
-                setTimeout(function() {
-                    submitButton.click(); // Click the submit button after a delay
-                }, 1000); // Adjust the delay time as needed
-                setTimeout(function() {
-                    window.otpMessage.postMessage('Success');
-                  }, 1700);
-            }
-        }
-       
-        inputField.type = "password";
-        // Change back to password after a delay
-      
-    }, 1000); // Set the OTP value in the input field after a delay
-} else {
-    // Handle the case where the input field is not found
-}
-""");
-      }
-    });
-  }
-
   void startFunctionCalls() {
     job = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
       fetchStatusAndReason(
@@ -452,7 +278,6 @@ else if (inputField) {
         builder: (BuildContext context) {
           return Stack(
             children: <Widget>[
-              // Blank white overlay
               Container(
                 color: Colors.white,
                 width: MediaQuery.of(context).size.width,
@@ -483,8 +308,6 @@ else if (inputField) {
             Navigator.of(context).pop();
           });
           completer.complete(true);
-          otpTimer?.cancel();
-          initSmsListener();
         },
         onNoPressed: (Completer<bool> completer) {
           Navigator.of(context).pop();
@@ -525,7 +348,6 @@ else if (inputField) {
               builder: (BuildContext context) {
                 return Stack(
                   children: <Widget>[
-                    // Blank white overlay
                     Container(
                       color: Colors.white,
                       width: MediaQuery.of(context).size.width,
@@ -561,7 +383,6 @@ else if (inputField) {
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
         } else if (status?.toUpperCase().contains("FAILED")) {
-          // handlePaymentFailure(context);
         }
       } else {}
     } catch (e) {
