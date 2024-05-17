@@ -49,7 +49,6 @@ class _WebViewPageState extends State<WebViewPage> {
 
   _WebViewPageState({required String referrer}) {
     headers = {
-      // 'referrer': referrer,
       'Referer': referrer,
       'Origin': referrer
     };
@@ -76,22 +75,19 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void createBaseUrl() {
-    if(widget.env == "sandbox-")
-    {if (widget.upiApps.isNotEmpty) {
-      baseUrl =
-          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1&${widget.upiApps}';
+    String domain;
+    if (widget.env == "sandbox-" || widget.env == "test-") {
+      domain = "tech";
     } else {
-      baseUrl =
-          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
-    }}
-    else{
-      if (widget.upiApps.isNotEmpty) {
-      baseUrl =
-          'https://checkout.boxpay.in/?token=${widget.token}&hmh=1&${widget.upiApps}';
-    } else {
-      baseUrl =
-          'https://checkout.boxpay.in/?token=${widget.token}&hmh=1';
+      domain = "in";
     }
+
+    if (widget.upiApps.isNotEmpty) {
+      baseUrl =
+          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
+    } else {
+      baseUrl =
+          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
   }
 

@@ -20,7 +20,7 @@ class BoxPayCheckout {
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
-        env = sandboxEnabled == true ? "sandbox-" : "prod";
+        env = sandboxEnabled == true ? "sandbox-" : "";
 
   Future<void> display() async {
     try {
