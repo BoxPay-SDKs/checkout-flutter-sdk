@@ -22,7 +22,7 @@ class BoxPayCheckout {
       : sandboxEnabled = sandboxEnabled ?? false,
         env = sandboxEnabled == true ? "sandbox-" : "test-";
 
-    Future<void> display() async {
+  Future<void> display() async {
     try {
       final responseData = await fetchSessionDataFromApi(token);
       final referrer = extractReferer(responseData);
@@ -66,7 +66,6 @@ class BoxPayCheckout {
         ),
       );
     } catch (e) {
-      // Show alert dialog with the exception message
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -94,13 +93,16 @@ class BoxPayCheckout {
 
   Future<String> fetchSessionDataFromApi(String token) async {
     String apienv;
+    String domain;
     if (sandboxEnabled) {
-      apienv = "sandbox";
+      apienv = "sandbox-";
+      domain = "tech";
     } else {
-      apienv = "test";
+      apienv = "test-";
+      domain = "tech";
     }
     final apiUrl =
-        'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
+        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
