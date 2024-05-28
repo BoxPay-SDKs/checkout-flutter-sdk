@@ -124,6 +124,7 @@ class Client {
           await http.post(url, headers: headers, body: jsonEncode(jsonData));
       if (response.statusCode == 201) {
         var tokenFetched = jsonDecode(response.body)['token'];
+        print("tokenn : $tokenFetched");
         if (enteredToken != null) {
           tokenFetched = enteredToken;
         }

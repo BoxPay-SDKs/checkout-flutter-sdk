@@ -25,8 +25,7 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
-              contentPadding: const EdgeInsets.fromLTRB(
-                  24, 16, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
@@ -52,8 +51,7 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
-              contentPadding: const EdgeInsets.fromLTRB(
-                  24, 16, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
@@ -97,6 +95,12 @@ Future<bool> redirectModal(
             final titlecolor = title == "Payment Failed"
                 ? const Color.fromARGB(255, 199, 33, 21)
                 : Colors.black;
+            Color iconColor;
+            if (title == "Confirmation"){
+              iconColor = Color.fromARGB(255, 255, 217, 3);
+            } else{
+              iconColor = const Color.fromARGB(255, 199, 33, 21);
+            }
             return AlertDialog(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -104,8 +108,7 @@ Future<bool> redirectModal(
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: titlecolor, size: 24),
+                      Icon(Icons.info_outline, color: iconColor, size: 24),
                       const SizedBox(width: 8),
                       Text(
                         title,
@@ -149,8 +152,7 @@ Future<bool> redirectModal(
                       backgroundColor: MaterialStateProperty.all<Color>(
                         secondaryButtonColor,
                       ),
-                      elevation:
-                          MaterialStateProperty.all<double>(2),
+                      elevation: MaterialStateProperty.all<double>(2),
                       shadowColor: MaterialStateProperty.all<Color>(
                           Colors.black.withOpacity(0.04)),
                     ),
@@ -175,8 +177,7 @@ Future<bool> redirectModal(
                       backgroundColor: MaterialStateProperty.all<Color>(
                         primaryButtonColor,
                       ),
-                      elevation:
-                          MaterialStateProperty.all<double>(2),
+                      elevation: MaterialStateProperty.all<double>(2),
                       shadowColor: MaterialStateProperty.all<Color>(
                           Colors.black.withOpacity(0.04)),
                     ),
