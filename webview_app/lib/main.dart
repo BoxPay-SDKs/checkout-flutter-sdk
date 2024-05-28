@@ -63,7 +63,17 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Radio<String>(
-                  value: 'sandbox',
+                  value: '',
+                  groupValue: _selectedEnv,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedEnv = value!;
+                    });
+                  },
+                ),
+                Text('Prod'),
+                Radio<String>(
+                  value: 'sandbox-',
                   groupValue: _selectedEnv,
                   onChanged: (value) {
                     setState(() {
@@ -73,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Text('Sandbox'),
                 Radio<String>(
-                  value: 'test',
+                  value: 'test-',
                   groupValue: _selectedEnv,
                   onChanged: (value) {
                     setState(() {
@@ -95,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: () {
                 Client buffer = Client(context);
-                _selectedEnv = "test";
+                _selectedEnv = "test-";
                 buffer.makePaymentRequest(null , _selectedEnv);
               },
               child: const Text('Open Checkout by default token'),

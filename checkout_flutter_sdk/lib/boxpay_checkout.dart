@@ -20,48 +20,68 @@ class BoxPayCheckout {
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
-        env = sandboxEnabled == true ? "sandbox-" : "prod";
+        env = sandboxEnabled == true ? "sandbox-" : "";
 
   Future<void> display() async {
-    final responseData = await fetchSessionDataFromApi(token);
-    final referrer = extractReferer(responseData);
-    final merchantDetails = extractMerchantDetails(responseData);
-    final backurl = extractBackURL(responseData);
+    try {
+      final responseData = await fetchSessionDataFromApi(token);
+      final referrer = extractReferer(responseData);
+      final merchantDetails = extractMerchantDetails(responseData);
+      final backurl = extractBackURL(responseData);
 
-    List<String> foundApps = [];
+      List<String> foundApps = [];
 
-    final isGpayInstalled =
-        await isAppInstalled('com.google.android.apps.nbu.paisa.user');
-    final isPaytmInstalled = await isAppInstalled('net.one97.paytm');
-    final isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
+      final isGpayInstalled =
+          await isAppInstalled('com.google.android.apps.nbu.paisa.user');
+      final isPaytmInstalled = await isAppInstalled('net.one97.paytm');
+      final isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
 
-    if (isGpayInstalled) {
-      foundApps.add("gp=1");
+      if (isGpayInstalled) {
+        foundApps.add("gp=1");
+      }
+      if (isPaytmInstalled) {
+        foundApps.add("pm=1");
+      }
+      if (isPhonepeInstalled) {
+        foundApps.add("pp=1");
+      }
+
+      String upiApps = "";
+      if (foundApps.isNotEmpty) {
+        upiApps = foundApps.join('&');
+      }
+      await storeMerchantDetailsAndReturnUrlInSharedPreferences(
+          merchantDetails, backurl);
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => WebViewPage(
+              token: token,
+              onPaymentResult: onPaymentResult,
+              env: env,
+              upiApps: upiApps,
+              referrer: referrer),
+        ),
+      );
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Try Again!'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
-    if (isPaytmInstalled) {
-      foundApps.add("pm=1");
-    }
-    if (isPhonepeInstalled) {
-      foundApps.add("pp=1");
-    }
-
-    String upiApps = "";
-    if (foundApps.isNotEmpty) {
-      upiApps = foundApps.join('&');
-    }
-    await storeMerchantDetailsAndReturnUrlInSharedPreferences(
-        merchantDetails, backurl);
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (BuildContext context) => WebViewPage(
-            token: token,
-            onPaymentResult: onPaymentResult,
-            env: env,
-            upiApps: upiApps,
-            referrer: referrer),
-      ),
-    );
   }
 
   Future<bool> isAppInstalled(String packageName) async {
@@ -71,13 +91,16 @@ class BoxPayCheckout {
 
   Future<String> fetchSessionDataFromApi(String token) async {
     String apienv;
+    String domain;
     if (sandboxEnabled) {
-      apienv = "sandbox";
+      apienv = "sandbox-";
+      domain = "tech";
     } else {
-      apienv = "prod";
+      apienv = "";
+      domain = "in";
     }
     final apiUrl =
-        'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
+        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

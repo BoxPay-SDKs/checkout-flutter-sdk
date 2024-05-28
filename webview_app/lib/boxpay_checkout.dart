@@ -13,16 +13,18 @@ class BoxPayCheckout {
   final Function(PaymentResultObject) onPaymentResult;
   bool sandboxEnabled;
   String env;
+  String selectedEnv;
 
   BoxPayCheckout(
       {required this.context,
       required this.token,
       required this.onPaymentResult,
+      required this.selectedEnv,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
         env = sandboxEnabled == true ? "sandbox-" : "test-";
 
-    Future<void> display() async {
+  Future<void> display() async {
     try {
       final responseData = await fetchSessionDataFromApi(token);
       final referrer = extractReferer(responseData);
@@ -57,16 +59,15 @@ class BoxPayCheckout {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => WebViewPage(
-            token: token,
-            onPaymentResult: onPaymentResult,
-            env: env,
-            upiApps: upiApps,
-            referrer: referrer,
-          ),
+              token: token,
+              onPaymentResult: onPaymentResult,
+              env: env,
+              upiApps: upiApps,
+              referrer: referrer,
+              selectedEnv: selectedEnv),
         ),
       );
     } catch (e) {
-      // Show alert dialog with the exception message
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -93,14 +94,17 @@ class BoxPayCheckout {
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    String apienv;
-    if (sandboxEnabled) {
-      apienv = "sandbox";
+    // String apienv;
+    String domain;
+    if (selectedEnv == "") {
+      domain = "in";
     } else {
-      apienv = "test";
+      domain = "tech";
     }
+    print("selected env, $selectedEnv");
+    print("domain, $domain");
     final apiUrl =
-        'https://$apienv-apis.boxpay.tech/v0/checkout/sessions/$token';
+        'https://${selectedEnv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -141,5 +145,4 @@ class BoxPayCheckout {
     }
     return '';
   }
-
 }

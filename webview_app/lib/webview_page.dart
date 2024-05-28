@@ -6,7 +6,7 @@ import 'package:webview_app/custom_appbar.dart';
 import 'package:webview_app/dialogs/redirect_modal.dart';
 import 'package:webview_app/loader_sheet.dart';
 import 'package:webview_app/payment_result_object.dart';
-import 'package:webview_app/quickpay_sheet.dart';
+// import 'package:webview_app/quickpay_sheet.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -26,6 +26,7 @@ class WebViewPage extends StatefulWidget {
   final String env;
   final String upiApps;
   final String referrer;
+  final String selectedEnv;
 
   const WebViewPage(
       {super.key,
@@ -33,7 +34,8 @@ class WebViewPage extends StatefulWidget {
       required this.onPaymentResult,
       required this.env,
       required this.upiApps,
-      required this.referrer});
+      required this.referrer,
+      required this.selectedEnv});
 
   @override
   State<WebViewPage> createState() => _WebViewPageState(referrer: referrer);
@@ -49,7 +51,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
-  bool _quickpay = true;
+  // bool _quickpay = true;
 
   _WebViewPageState({required String referrer}) {
     headers = {
@@ -82,12 +84,19 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void createBaseUrl() {
+    String domain;
+    if (widget.selectedEnv == "sandbox-" || widget.selectedEnv == "test-") {
+      domain = "tech";
+    } else {
+      domain = "in";
+    }
+
     if (widget.upiApps.isNotEmpty) {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1&${widget.upiApps}';
+          'https://${widget.selectedEnv}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
     } else {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.tech/?token=${widget.token}&hmh=1';
+          'https://${widget.selectedEnv}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
   }
 
@@ -130,7 +139,6 @@ class _WebViewPageState extends State<WebViewPage> {
             completer.complete(false);
           }, onYesPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            // _controller.loadUrl(currentUrl, headers: headers);
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
@@ -219,41 +227,44 @@ class _WebViewPageState extends State<WebViewPage> {
                 const Center(
                   child: LoaderSheet(),
                 ),
-                if (_quickpay)
-              Positioned.fill(
-                child: Container(
-                  color: Color.fromARGB(255, 255, 255, 255), // Adjust opacity as needed
-                ),
-              ),
-            if (_quickpay)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white, // Set your desired background color for the bottom sheet
-                  ),
-                  child: BottomSheet(
-                    // Customize this BottomSheet as per your requirements
-                    enableDrag: true,
-                    onClosing: closeQuickpayBottomSheet,
-                    builder: (BuildContext context) {
-                     return QuickpayBottomSheet(onClose: closeQuickpayBottomSheet);
-                    },
-                  ),
-                ),
-              ),
+              // if (_quickpay)
+              //   Positioned.fill(
+              //     child: Container(
+              //       color: Color.fromARGB(
+              //           255, 255, 255, 255), // Adjust opacity as needed
+              //     ),
+              //   ),
+              // if (_quickpay)
+              //   Align(
+              //     alignment: Alignment.bottomCenter,
+              //     child: Container(
+              //       decoration: const BoxDecoration(
+              //         color: Colors
+              //             .white, // Set your desired background color for the bottom sheet
+              //       ),
+              //       child: BottomSheet(
+              //         // Customize this BottomSheet as per your requirements
+              //         enableDrag: true,
+              //         onClosing: closeQuickpayBottomSheet,
+              //         builder: (BuildContext context) {
+              //           return QuickpayBottomSheet(
+              //               onClose: closeQuickpayBottomSheet);
+              //         },
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         ),
       ),
     );
   }
-  
-  void closeQuickpayBottomSheet() {
-  setState(() {
-    _quickpay = false;
-  });
-}
+
+  // void closeQuickpayBottomSheet() {
+  //   setState(() {
+  //     _quickpay = false;
+  //   });
+  // }
 
   void launchUPIIntentURL(String upiURL) async {
     // ignore: deprecated_member_use
@@ -506,7 +517,6 @@ else if (inputField) {
         builder: (BuildContext context) {
           return Stack(
             children: <Widget>[
-              // Blank white overlay
               Container(
                 color: Colors.white,
                 width: MediaQuery.of(context).size.width,
@@ -579,7 +589,6 @@ else if (inputField) {
               builder: (BuildContext context) {
                 return Stack(
                   children: <Widget>[
-                    // Blank white overlay
                     Container(
                       color: Colors.white,
                       width: MediaQuery.of(context).size.width,
@@ -614,9 +623,7 @@ else if (inputField) {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
-        } else if (status?.toUpperCase().contains("FAILED")) {
-          // handlePaymentFailure(context);
-        }
+        } else if (status?.toUpperCase().contains("FAILED")) {}
       } else {}
     } catch (e) {
       print("Error occurred: $e");
