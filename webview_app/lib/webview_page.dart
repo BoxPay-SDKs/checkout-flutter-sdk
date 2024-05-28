@@ -94,7 +94,7 @@ class _WebViewPageState extends State<WebViewPage> {
       onWillPop: () async {
         if (currentUrl.contains(backUrl) ||
             currentUrl.contains('privacy') ||
-            currentUrl.contains('terms-conditions')) {
+            currentUrl.contains('terms-conditions') || currentUrl.contains("boxpay.atlassian.net") || currentUrl.contains("contact-us-form") || currentUrl.contains("hello")) {
           return redirectModal(context,
               title: "Confirmation",
               content: "Are you sure you want to go back?",
@@ -181,6 +181,7 @@ class _WebViewPageState extends State<WebViewPage> {
                   },
                   javascriptMode: JavascriptMode.unrestricted,
                   navigationDelegate: (NavigationRequest request) async {
+                    print("navigation  url = ${request.url}");
                     currentUrl = request.url;
                     if (currentUrl.contains("pns")) {
                       handlePaymentFailure(context);
@@ -384,8 +385,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
-        } else if (status?.toUpperCase().contains("FAILED")) {
-        }
+        } else if (status?.toUpperCase().contains("FAILED")) {}
       } else {}
     } catch (e) {
       print("Error occurred: $e");
