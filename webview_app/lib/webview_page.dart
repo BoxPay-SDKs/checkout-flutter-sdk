@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_app/custom_appbar.dart';
 import 'package:webview_app/dialogs/redirect_modal.dart';
 import 'package:webview_app/loader_sheet.dart';
 import 'package:webview_app/payment_result_object.dart';
+// import 'package:webview_app/quickpay_sheet.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -14,6 +16,7 @@ import 'dart:core';
 import 'package:url_launcher/url_launcher.dart';
 
 Timer? job;
+Timer? otpTimer;
 Timer? modalCheckTimer;
 bool isFlagSet = false;
 
@@ -23,6 +26,7 @@ class WebViewPage extends StatefulWidget {
   final String env;
   final String upiApps;
   final String referrer;
+  final String selectedEnv;
 
   const WebViewPage(
       {super.key,
@@ -30,7 +34,8 @@ class WebViewPage extends StatefulWidget {
       required this.onPaymentResult,
       required this.env,
       required this.upiApps,
-      required this.referrer});
+      required this.referrer,
+      required this.selectedEnv});
 
   @override
   State<WebViewPage> createState() => _WebViewPageState(referrer: referrer);
@@ -40,14 +45,20 @@ class _WebViewPageState extends State<WebViewPage> {
   late WebViewController _controller;
   String currentUrl = '';
   late String backUrl = '';
+  String otp = '';
   bool _isFirstRender = true;
   bool _isIntentLaunch = false;
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
+  // bool _quickpay = true;
 
   _WebViewPageState({required String referrer}) {
-    headers = {'Referer': referrer, 'Origin': referrer};
+    headers = {
+      // 'referrer': referrer,
+      'Referer': referrer,
+      'Origin': referrer
+    };
   }
 
   @override
@@ -59,6 +70,7 @@ class _WebViewPageState extends State<WebViewPage> {
     _isFirstRender = true;
     fetchReturnUrl();
     timerModalListener();
+    otp = '';
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
   }
 
@@ -66,13 +78,14 @@ class _WebViewPageState extends State<WebViewPage> {
   void dispose() {
     stopFunctionCalls();
     AltSmsAutofill().unregisterListener();
+    otpTimer?.cancel();
     modalCheckTimer?.cancel();
     super.dispose();
   }
 
   void createBaseUrl() {
     String domain;
-    if (widget.env == "sandbox-" || widget.env == "test-") {
+    if (widget.selectedEnv == "sandbox-" || widget.selectedEnv == "test-") {
       domain = "tech";
     } else {
       domain = "in";
@@ -80,10 +93,10 @@ class _WebViewPageState extends State<WebViewPage> {
 
     if (widget.upiApps.isNotEmpty) {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
+          'https://${widget.selectedEnv}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
     } else {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
+          'https://${widget.selectedEnv}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
   }
 
@@ -130,6 +143,8 @@ class _WebViewPageState extends State<WebViewPage> {
               _controller.goBack();
             }
             completer.complete(false);
+            otpTimer?.cancel();
+            initSmsListener();
           });
         } else {
           Navigator.of(context).pop();
@@ -149,8 +164,16 @@ class _WebViewPageState extends State<WebViewPage> {
                     webViewController.loadUrl(baseUrl, headers: headers);
                     _controller = webViewController;
                     currentUrl = baseUrl;
+                    initSmsListener();
                   },
                   javascriptChannels: <JavascriptChannel>{
+                    JavascriptChannel(
+                        name: 'otpMessage',
+                        onMessageReceived: (JavascriptMessage message) {
+                          if (message.message == "Success") {
+                            otpTimer!.cancel();
+                          }
+                        }),
                     JavascriptChannel(
                         name: 'upiTimerModal',
                         onMessageReceived: (JavascriptMessage message) {
@@ -204,12 +227,44 @@ class _WebViewPageState extends State<WebViewPage> {
                 const Center(
                   child: LoaderSheet(),
                 ),
+              // if (_quickpay)
+              //   Positioned.fill(
+              //     child: Container(
+              //       color: Color.fromARGB(
+              //           255, 255, 255, 255), // Adjust opacity as needed
+              //     ),
+              //   ),
+              // if (_quickpay)
+              //   Align(
+              //     alignment: Alignment.bottomCenter,
+              //     child: Container(
+              //       decoration: const BoxDecoration(
+              //         color: Colors
+              //             .white, // Set your desired background color for the bottom sheet
+              //       ),
+              //       child: BottomSheet(
+              //         // Customize this BottomSheet as per your requirements
+              //         enableDrag: true,
+              //         onClosing: closeQuickpayBottomSheet,
+              //         builder: (BuildContext context) {
+              //           return QuickpayBottomSheet(
+              //               onClose: closeQuickpayBottomSheet);
+              //         },
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         ),
       ),
     );
   }
+
+  // void closeQuickpayBottomSheet() {
+  //   setState(() {
+  //     _quickpay = false;
+  //   });
+  // }
 
   void launchUPIIntentURL(String upiURL) async {
     // ignore: deprecated_member_use
@@ -251,6 +306,188 @@ class _WebViewPageState extends State<WebViewPage> {
                   }, 500);
               }
         ''');
+      }
+    });
+  }
+
+  void initSmsListener() async {
+    String? comingSms;
+    try {
+      comingSms = await AltSmsAutofill().listenForSms;
+    } on PlatformException {
+      comingSms = 'Failed to get Sms.';
+    }
+    if (!mounted || comingSms == null) return;
+
+    if (comingSms.isNotEmpty) {
+      RegExp regex = RegExp(r'\b\d{6}\b');
+      Iterable<Match> matches = regex.allMatches(comingSms);
+
+      if (matches.isNotEmpty) {
+        otp = matches.first.group(0)!;
+        _injectOtp();
+      }
+    }
+  }
+
+  void _injectOtp() {
+    otpTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
+      if (otp.isNotEmpty) {
+        // ignore: deprecated_member_use
+        await _controller.evaluateJavascript("""
+            var proceedButtonIDFC = document.querySelector('.btn-idfc-maroon');
+            var inputFieldWithPassword = document.querySelector('input[type="password"]');
+            var inputFieldWithAutoComplete = document.querySelector('input[autocomplete="one-time-code"]'); 
+    var inputField = document.querySelector('input'); // Assuming this is your OTP input field
+var submitButton = document.querySelector('button[type="submit"]');
+var submitButtonMainButton = document.querySelector('td.mainbutton a#submitOTP');
+var makePaymentButton = document.querySelector('button[type="button"]');
+
+
+if(inputFieldWithAutoComplete){
+    inputFieldWithAutoComplete.type = "text";
+ inputFieldWithAutoComplete.value = "$otp";
+    setTimeout(function() {
+    if(submitButtonMainButton){
+        submitButtonMainButton.disabled = false;
+                setTimeout(function() {
+                    submitButtonMainButton.click(); // Click the submit button after a delay
+                }, 1000);
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+        }
+        else if (submitButton) {
+            if (submitButton.disabled) {
+                // If the submit button is disabled, enable it
+                submitButton.disabled = false;
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            } else {
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            }
+        }
+        // Change back to password after a delay
+        
+       }, 1800);
+    }
+else if(inputFieldWithPassword){
+    inputFieldWithPassword.value = "$otp";sdfghh
+ 
+    setTimeout(function() {
+    
+    if(proceedButtonIDFC){
+    proceedButtonIDFC.disabled = false;
+                setTimeout(function() {
+                    proceedButtonIDFC.click(); // Click the submit button after a delay
+                }, 1000);
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+    }
+    else if(submitButtonMainButton){
+        submitButtonMainButton.disabled = false;
+                setTimeout(function() {
+                    submitButtonMainButton.click(); // Click the submit button after a delay
+                }, 1000);
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+        }
+        else if (submitButton) {
+            if (submitButton.disabled) {
+                // If the submit button is disabled, enable it
+                submitButton.disabled = false;
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            } else {
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            }
+        }else if(makePaymentButton){
+        if (makePaymentButton.disabled) {
+                // If the submit button is disabled, enable it
+                makePaymentButton.disabled = false;
+                setTimeout(function() {
+                    makePaymentButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            } else {
+                setTimeout(function() {
+                    makePaymentButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            }
+        }
+        
+        // Change back to password after a delay
+        
+    }, 1800); 
+}
+else if (inputField) {
+    inputField.value = "$otp";
+    setTimeout(function() {
+    if(submitButtonMainButton){
+        submitButtonMainButton.disabled = false;
+       
+                setTimeout(function() {
+                    submitButtonMainButton.click(); // Click the submit button after a delay
+                }, 1000);
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+        }
+        else if (submitButton) {
+       
+        
+            if (submitButton.disabled) {
+                // If the submit button is disabled, enable it
+                submitButton.disabled = false;
+      
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            } else {
+                setTimeout(function() {
+                    submitButton.click(); // Click the submit button after a delay
+                }, 1000); // Adjust the delay time as needed
+                  setTimeout(function() {
+                    window.otpMessage.postMessage('Success');
+                  }, 700);
+            }
+        }
+      
+        // Change back to password after a delay
+      
+    }, 1800); // Set the OTP value in the input field after a delay
+} else {
+    // Handle the case where the input field is not found
+}
+""");
       }
     });
   }
@@ -310,6 +547,8 @@ class _WebViewPageState extends State<WebViewPage> {
             Navigator.of(context).pop();
           });
           completer.complete(true);
+          otpTimer?.cancel();
+          initSmsListener();
         },
         onNoPressed: (Completer<bool> completer) {
           Navigator.of(context).pop();
@@ -384,8 +623,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
-        } else if (status?.toUpperCase().contains("FAILED")) {
-        }
+        } else if (status?.toUpperCase().contains("FAILED")) {}
       } else {}
     } catch (e) {
       print("Error occurred: $e");

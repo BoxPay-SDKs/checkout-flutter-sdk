@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:webview_app/boxpay_checkout.dart';
 import 'package:webview_app/payment_result_object.dart';
@@ -13,11 +14,11 @@ class Client {
 
   Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/k14tskiopy/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/k14ut9k7gQ/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer tc8v66sgnfxx3oLT4MhUirvA1k1blW32jIK3yHqVFObMjeFtJcXsdhjkDtvJPIhJ6vA68SvQUuLypHFfK9ccJf',
+          'Bearer bXj9R23osaf70w00Rn2RXFVOUpis6sn1XNPWkDu8g9tpwjP4hZThKqS38iA6E931qbm3bXGLKQJ7scZaufrMvq',
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -120,27 +121,40 @@ class Client {
       "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/"
     };
     try {
-      final response =
-          await http.post(url, headers: headers, body: jsonEncode(jsonData));
-      if (response.statusCode == 201) {
-        var tokenFetched = jsonDecode(response.body)['token'];
-        if (enteredToken != null) {
-          tokenFetched = enteredToken;
+      if (enteredToken == null) {
+        final response =
+            await http.post(url, headers: headers, body: jsonEncode(jsonData));
+        if (response.statusCode == 201) {
+          var tokenFetched = jsonDecode(response.body)['token'];
+          print("token : $tokenFetched");
+          bool sandboxflag = false;
+          if (envSelected == "sandbox") {
+            sandboxflag = true;
+          }
+          BoxPayCheckout boxPayCheckout = BoxPayCheckout(
+              context: context,
+              token: tokenFetched,
+              onPaymentResult: onPaymentResult,
+              sandboxEnabled: sandboxflag,
+              selectedEnv: envSelected);
+          await boxPayCheckout.display();
+        } else {
+          print('Error occurred: ${response.statusCode}');
+          print('Details: ${response.body}');
+          // Handle error
         }
+      } else {
         bool sandboxflag = false;
-        if (envSelected == "sandbox") {
-          sandboxflag = true;
-        }
+          if (envSelected == "sandbox") {
+            sandboxflag = true;
+          }
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
             context: context,
-            token: tokenFetched,
+            token: enteredToken,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: sandboxflag);
+            sandboxEnabled: sandboxflag,
+            selectedEnv: envSelected);
         await boxPayCheckout.display();
-      } else {
-        print('Error occurred: ${response.statusCode}');
-        print('Details: ${response.body}');
-        // Handle error
       }
     } catch (e) {
       print('Error occurred: $e');

@@ -13,11 +13,13 @@ class BoxPayCheckout {
   final Function(PaymentResultObject) onPaymentResult;
   bool sandboxEnabled;
   String env;
+  String selectedEnv;
 
   BoxPayCheckout(
       {required this.context,
       required this.token,
       required this.onPaymentResult,
+      required this.selectedEnv,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
         env = sandboxEnabled == true ? "sandbox-" : "test-";
@@ -57,12 +59,12 @@ class BoxPayCheckout {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => WebViewPage(
-            token: token,
-            onPaymentResult: onPaymentResult,
-            env: env,
-            upiApps: upiApps,
-            referrer: referrer,
-          ),
+              token: token,
+              onPaymentResult: onPaymentResult,
+              env: env,
+              upiApps: upiApps,
+              referrer: referrer,
+              selectedEnv: selectedEnv),
         ),
       );
     } catch (e) {
@@ -92,17 +94,17 @@ class BoxPayCheckout {
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    String apienv;
+    // String apienv;
     String domain;
-    if (sandboxEnabled) {
-      apienv = "sandbox-";
-      domain = "tech";
+    if (selectedEnv == "") {
+      domain = "in";
     } else {
-      apienv = "test-";
       domain = "tech";
     }
+    print("selected env, $selectedEnv");
+    print("domain, $domain");
     final apiUrl =
-        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
+        'https://${selectedEnv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -143,5 +145,4 @@ class BoxPayCheckout {
     }
     return '';
   }
-
 }
