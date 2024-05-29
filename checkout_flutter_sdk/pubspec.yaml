@@ -1,6 +1,6 @@
 name: checkout_flutter_sdk
 description: "Boxpay Web View sdk."
-version: 0.1.3
+version: 1.0.5
 homepage:
 repository: https://github.com/BoxPay-SDKs/checkout-flutter-sdk.git
 
