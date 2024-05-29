@@ -13,11 +13,11 @@ class Client {
 
   Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/k14tskiopy/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/k14ut9k7gQ/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer tc8v66sgnfxx3oLT4MhUirvA1k1blW32jIK3yHqVFObMjeFtJcXsdhjkDtvJPIhJ6vA68SvQUuLypHFfK9ccJf',
+          'Bearer bXj9R23osaf70w00Rn2RXFVOUpis6sn1XNPWkDu8g9tpwjP4hZThKqS38iA6E931qbm3bXGLKQJ7scZaufrMvq',
     };
     final Map<String, dynamic> jsonData = {
       "context": {
@@ -131,6 +131,8 @@ class Client {
         if (envSelected == "sandbox") {
           sandboxflag = true;
         }
+        print("tokenn : $tokenFetched");
+        print("sandboxflag $sandboxflag");
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
             context: context,
             token: tokenFetched,

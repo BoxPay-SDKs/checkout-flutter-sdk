@@ -260,9 +260,13 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void startFunctionCalls() {
-    job = Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
+    String domain = "tech";
+    if (widget.env == "") {
+      domain = "in";
+    }
+    job = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
       fetchStatusAndReason(
-          "https://${widget.env}apis.boxpay.tech/v0/checkout/sessions/${widget.token}/status");
+          "https://${widget.env}apis.boxpay.$domain/v0/checkout/sessions/${widget.token}/status");
     });
   }
 
