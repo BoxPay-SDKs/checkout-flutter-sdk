@@ -108,7 +108,18 @@ class _WebViewPageState extends State<WebViewPage> {
             }
             completer.complete(false);
           });
-        } else if (_upiTimerModal && currentUrl.contains('hmh')) {
+        } else if(!_upiTimerModal && backUrl.contains("https://www.boxpay.tech")){
+          return redirectModal(context,
+              title: "Confirmation",
+              content: "Are you sure you want to go back?",
+              noButtonText: "Exit Anyway",
+              yesButtonText: "Stay", onYesPressed: (Completer<bool> completer) {
+            completer.complete(false);
+          }, onNoPressed: (Completer<bool> completer) async {
+            Navigator.of(context).pop();
+                      return NavigationDecision.prevent;
+          });
+        }else if (_upiTimerModal && currentUrl.contains('hmh')) {
           currentUrl = baseUrl;
           _controller.loadUrl(currentUrl, headers: headers);
           setState(() {
@@ -239,7 +250,7 @@ class _WebViewPageState extends State<WebViewPage> {
       if (currentUrl.contains("hmh")) {
         // ignore: deprecated_member_use
         await _controller.evaluateJavascript('''
-              var modal = document.querySelector('.upiModal');
+              var modal = document.querySelector('.upi-timer-modal-root');
 
               if(modal){
                 setTimeout(function() {
@@ -347,6 +358,14 @@ class _WebViewPageState extends State<WebViewPage> {
           widget.onPaymentResult(PaymentResultObject("Success"));
           job?.cancel();
           stopFunctionCalls();
+        } else if(status?.toUpperCase().contains("REJECTED") || status?.toUpperCase().contains("FAILED")) {
+          widget.onPaymentResult(PaymentResultObject("Failed"));
+          job?.cancel();
+          stopFunctionCalls();
+        } else if(status?.toUpperCase().contains("RequiresAction")){
+          widget.onPaymentResult(PaymentResultObject("RequiresAction"));
+          job?.cancel();
+          stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {
         } else if (status?.toUpperCase().contains("EXPIRED")) {
           showDialog(
@@ -388,8 +407,10 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
-        } else if (status?.toUpperCase().contains("FAILED")) {
-        }
+          widget.onPaymentResult(PaymentResultObject("Processing"));
+          job?.cancel();
+          stopFunctionCalls();
+        } else if (status?.toUpperCase().contains("FAILED")) {}
       } else {}
     } catch (e) {
       print("Error occurred: $e");
