@@ -115,5 +115,12 @@ class Client {
         MaterialPageRoute(builder: (context) => const ThankYouPage()),
       );
     }
+    if (status.result == "Failed") {
+      // Close BoxPayCheckout and navigate to thank you page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const FailurePage()),
+      );
+    }
   }
 }
