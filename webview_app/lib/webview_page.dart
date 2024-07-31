@@ -407,7 +407,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
-          widget.onPaymentResult(PaymentResultObject("Processing"));
+          widget.onPaymentResult(PaymentResultObject("Posted"));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("FAILED")) {}

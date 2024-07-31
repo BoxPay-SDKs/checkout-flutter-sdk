@@ -29,3 +29,32 @@ class ThankYouPage extends StatelessWidget {
     );
   }
 }
+
+
+class FailurePage extends StatelessWidget {
+  const FailurePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      appBar: CustomAppBar(title: "Payment Failed"),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_rounded,
+              color: Color.fromARGB(255, 224, 9, 9),
+              size: 100,
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Payment Failed',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
