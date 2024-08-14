@@ -92,9 +92,15 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl.contains(backUrl) ||
+        if(currentUrl.contains('servicedesk') || currentUrl.contains('hello')) {
+          currentUrl = baseUrl;
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
+            return false;
+        } else if (currentUrl.contains(backUrl) ||
             currentUrl.contains('privacy') ||
-            currentUrl.contains('terms-conditions')) {
+            currentUrl.contains('terms-conditions') || !currentUrl.contains('boxpay')) {
           return redirectModal(context,
               title: "Confirmation",
               content: "Are you sure you want to go back?",
@@ -198,13 +204,6 @@ class _WebViewPageState extends State<WebViewPage> {
                     } else if (currentUrl.contains("pay?") &&
                         currentUrl.contains("pa")) {
                       launchUPIIntentURL(currentUrl);
-                      return NavigationDecision.prevent;
-                    } else if (currentUrl == 'https://www.boxpay.tech/') {
-                      currentUrl = baseUrl;
-                      await _controller.loadUrl(currentUrl, headers: headers);
-                      return NavigationDecision.prevent;
-                    } else if (currentUrl.contains(backUrl)) {
-                      Navigator.of(context).pop();
                       return NavigationDecision.prevent;
                     }
                     return NavigationDecision.navigate;
@@ -355,15 +354,14 @@ class _WebViewPageState extends State<WebViewPage> {
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
+              job?.cancel();
+          stopFunctionCalls();
           widget.onPaymentResult(PaymentResultObject("Success"));
-          job?.cancel();
-          stopFunctionCalls();
         } else if(status?.toUpperCase().contains("REJECTED") || status?.toUpperCase().contains("FAILED")) {
-          widget.onPaymentResult(PaymentResultObject("Failed"));
           job?.cancel();
           stopFunctionCalls();
+          widget.onPaymentResult(PaymentResultObject("Failed"));
         } else if(status?.toUpperCase().contains("RequiresAction")){
-          widget.onPaymentResult(PaymentResultObject("RequiresAction"));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {

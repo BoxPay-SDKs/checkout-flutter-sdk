@@ -26,14 +26,14 @@ class Client {
     "orderId": "test12"
   },
   "paymentType": "S",
-  "money": {"amount": "1", "currencyCode": "INR"},
+  "money": {"amount": "10000", "currencyCode": "INR"},
   "descriptor": {"line1": "Some descriptor"},
   "shopper": {
     "firstName": "Ishika",
     "lastName": "Bansal",
     "email":"ishika.bansal@boxpay.tech",
     "uniqueReference": "x123y",
-    "phoneNumber": "919876543210",
+    "phoneNumber": "+919876543210",
     "deliveryAddress": {
       "address1": "first line",
       "address2": "second line",
@@ -44,11 +44,6 @@ class Client {
     }
   },
   "order": {
-    "originalAmount": 423.73,
-    "shippingAmount": 50,
-    "voucherCode": "VOUCHER",
-    "taxAmount": 76.27,
-    "totalAmountWithoutTax": 423.73,
     "items": [
       {
         "id": "test",
@@ -113,13 +108,6 @@ class Client {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ThankYouPage()),
-      );
-    }
-    if (status.result == "Failed") {
-      // Close BoxPayCheckout and navigate to thank you page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FailurePage()),
       );
     }
   }
