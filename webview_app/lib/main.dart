@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:webview_app/boxpay_checkout.dart';
+import 'package:webview_app/payment_result_object.dart';
+import 'package:webview_app/thank_you_page.dart';
 import 'package:webview_app/client.dart'; // Import the BoxPayCheckout class
 
 void main() {
@@ -86,9 +89,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                String enteredToken = _amountController.text;
-                Client buffer = Client(context);
-                buffer.makePaymentRequest(enteredToken, _selectedEnv);
+                BoxPayCheckout boxPayCheckout = BoxPayCheckout(
+            context: context,
+            token: _amountController.text,
+            onPaymentResult: onPaymentResult,
+            sandboxEnabled: _selectedEnv == "sandbox");
+            boxPayCheckout.display();
               },
               child: const Text('Open Checkout by entering token'),
             ),
@@ -104,5 +110,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+  void onPaymentResult(PaymentResultObject status) {
+    print("========status received ${status.result}");
+    if (status.result == "Success") {
+      // Close BoxPayCheckout and navigate to thank you page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ThankYouPage()),
+      );
+    }
   }
 }

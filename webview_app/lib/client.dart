@@ -22,7 +22,7 @@ class Client {
     final Map<String, dynamic> jsonData = {
       "context": {
     "countryCode": "IN",
-    "legalEntity": {"code": "boxpay"},
+    "legalEntity": {"code": "razorpay"},
     "orderId": "test12"
   },
   "paymentType": "S",
