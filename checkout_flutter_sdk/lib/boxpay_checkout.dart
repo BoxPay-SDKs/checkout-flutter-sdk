@@ -100,7 +100,7 @@ class BoxPayCheckout {
       domain = "in";
     }
     final apiUrl =
-        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
+        'https://${apienv}apis.boxpay.$domain/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

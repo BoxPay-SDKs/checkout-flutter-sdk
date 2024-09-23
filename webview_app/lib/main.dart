@@ -71,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   },
                 ),
-                Text('Sandbox'),
+                const Text('Sandbox'),
                 Radio<String>(
                   value: 'test',
                   groupValue: _selectedEnv,
@@ -81,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   },
                 ),
-                Text('Test'),
+                const Text('Test'),
               ],
             ),
             ElevatedButton(
