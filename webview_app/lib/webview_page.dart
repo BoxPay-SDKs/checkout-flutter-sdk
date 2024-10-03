@@ -79,7 +79,7 @@ class _WebViewPageState extends State<WebViewPage> {
         onNavigationRequest: (NavigationRequest request) async {
           currentUrl = request.url;
           if (currentUrl.contains("pns")) {
-            handlePaymentFailure(context);
+            // handlePaymentFailure(context);
           } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
             launchUPIIntentURL(currentUrl);
             return NavigationDecision.prevent;
