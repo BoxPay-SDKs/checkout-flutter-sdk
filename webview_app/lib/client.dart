@@ -127,17 +127,14 @@ class Client {
         if (enteredToken != null) {
           tokenFetched = enteredToken;
         }
-        bool sandboxflag = false;
-        if (envSelected == "sandbox") {
-          sandboxflag = true;
-        }
+  
         print("tokenn : $tokenFetched");
-        print("sandboxflag $sandboxflag");
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
             context: context,
             token: tokenFetched,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: sandboxflag);
+            sandboxEnabled: envSelected == "sandbox");
+            boxPayCheckout.test = envSelected == "test";
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');

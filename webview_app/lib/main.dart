@@ -104,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
             token: _amountController.text,
             onPaymentResult: onPaymentResult,
             sandboxEnabled: _selectedEnv == "sandbox");
+            boxPayCheckout.test = _selectedEnv == "test";
             boxPayCheckout.display();
               },
               child: const Text('Open Checkout by entering token'),
