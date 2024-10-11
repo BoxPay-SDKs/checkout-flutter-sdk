@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Client buffer = Client(context);
                 _selectedEnv = "test";
-                buffer.makePaymentRequest(null , _selectedEnv);
+                buffer.makePaymentRequest(null , "test");
               },
               child: const Text('Open Checkout by default token'),
             ),
