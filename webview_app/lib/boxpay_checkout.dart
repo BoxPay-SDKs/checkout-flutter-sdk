@@ -12,7 +12,8 @@ class BoxPayCheckout {
   final String token;
   final Function(PaymentResultObject) onPaymentResult;
   bool sandboxEnabled;
-  String env;
+  late String env;
+  bool test = false;
 
   BoxPayCheckout(
       {required this.context,
@@ -20,11 +21,11 @@ class BoxPayCheckout {
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
-        env = sandboxEnabled == true ? "sandbox-" : "test-";
+        env = sandboxEnabled == true ? "sandbox-" : "";
 
   Future<void> display() async {
     try {
-      final responseData = await fetchSessionDataFromApi(token);
+      final responseData = await fetchSessionDataFromApi(token, test);
       final referrer = extractReferer(responseData);
       final merchantDetails = extractMerchantDetails(responseData);
       final backurl = extractBackURL(responseData);
@@ -91,18 +92,20 @@ class BoxPayCheckout {
     return isInstalled;
   }
 
-  Future<String> fetchSessionDataFromApi(String token) async {
-    String apienv;
+  Future<String> fetchSessionDataFromApi(String token, bool test) async {
     String domain;
     if (sandboxEnabled) {
-      apienv = "sandbox-";
+      env = "sandbox-";
+      domain = "tech";
+    } else if(test) {
+      env = "test-";
       domain = "tech";
     } else {
-      apienv = "test-";
-      domain = "tech";
+      env = "";
+      domain = "in";
     }
     final apiUrl =
-        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
+        'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

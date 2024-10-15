@@ -142,16 +142,16 @@ Future<bool> redirectModal(
                       Navigator.of(context).pop(true);
                     },
                     style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                           const RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(6)))),
-                      backgroundColor: MaterialStateProperty.all<Color>(
+                      backgroundColor: WidgetStateProperty.all<Color>(
                         secondaryButtonColor,
                       ),
                       elevation:
-                          MaterialStateProperty.all<double>(2),
-                      shadowColor: MaterialStateProperty.all<Color>(
+                          WidgetStateProperty.all<double>(2),
+                      shadowColor: WidgetStateProperty.all<Color>(
                           Colors.black.withOpacity(0.04)),
                     ),
                     child: Text(
@@ -168,16 +168,16 @@ Future<bool> redirectModal(
                       Navigator.of(context).pop(false);
                     },
                     style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                           const RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(6)))),
-                      backgroundColor: MaterialStateProperty.all<Color>(
+                      backgroundColor: WidgetStateProperty.all<Color>(
                         primaryButtonColor,
                       ),
                       elevation:
-                          MaterialStateProperty.all<double>(2),
-                      shadowColor: MaterialStateProperty.all<Color>(
+                          WidgetStateProperty.all<double>(2),
+                      shadowColor: WidgetStateProperty.all<Color>(
                           Colors.black.withOpacity(0.04)),
                     ),
                     child: Text(
