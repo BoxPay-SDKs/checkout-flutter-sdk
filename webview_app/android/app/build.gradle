@@ -50,6 +50,10 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
+    
+    lint {
+          baseline = file("lint-baseline.xml")
+    }
 
     buildTypes {
         release {
