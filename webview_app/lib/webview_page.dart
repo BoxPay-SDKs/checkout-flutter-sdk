@@ -8,7 +8,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import 'dart:core';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -103,7 +102,6 @@ class _WebViewPageState extends State<WebViewPage> {
   @override
   void dispose() {
     stopFunctionCalls();
-    AltSmsAutofill().unregisterListener();
     modalCheckTimer?.cancel();
     super.dispose();
   }
