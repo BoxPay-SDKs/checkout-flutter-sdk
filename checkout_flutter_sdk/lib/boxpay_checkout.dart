@@ -3,8 +3,6 @@ import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checkout_flutter_sdk/webview_page.dart';
 
 class BoxPayCheckout {
@@ -100,7 +98,7 @@ class BoxPayCheckout {
       domain = "in";
     }
     final apiUrl =
-        'https://${apienv}apis.boxpay.${domain}/v0/checkout/sessions/$token';
+        'https://${apienv}apis.boxpay.$domain/v0/checkout/sessions/$token';
     try {
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {

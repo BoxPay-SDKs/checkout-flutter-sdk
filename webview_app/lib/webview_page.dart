@@ -45,6 +45,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
+  String transactionId = "";
 
   _WebViewPageState({required String referrer}) {
     headers = {'Referer': referrer, 'Origin': referrer};
@@ -80,10 +81,10 @@ class _WebViewPageState extends State<WebViewPage> {
 
     if (widget.upiApps.isNotEmpty) {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
+          'https://${widget.env}checkout.boxpay.$domain/?token=${widget.token}&hmh=1&${widget.upiApps}';
     } else {
       baseUrl =
-          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
+          'https://${widget.env}checkout.boxpay.$domain/?token=${widget.token}&hmh=1';
     }
   }
 
@@ -107,6 +108,9 @@ class _WebViewPageState extends State<WebViewPage> {
               _controller.goBack();
             }
             completer.complete(false);
+          widget.onPaymentResult(PaymentResultObject("Failed",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
           });
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
           currentUrl = baseUrl;
@@ -130,10 +134,21 @@ class _WebViewPageState extends State<WebViewPage> {
               _controller.goBack();
             }
             completer.complete(false);
+          widget.onPaymentResult(PaymentResultObject("Failed",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
           });
         } else {
+            currentUrl = baseUrl;
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
+          widget.onPaymentResult(PaymentResultObject("NoAction",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
           Navigator.of(context).pop();
           return true;
+       
         }
       },
       child: Scaffold(
@@ -319,6 +334,9 @@ class _WebViewPageState extends State<WebViewPage> {
           Navigator.of(context).pop();
           Navigator.of(context).pop();
           completer.complete(false);
+          widget.onPaymentResult(PaymentResultObject("Failed",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
         },
       );
     }
@@ -333,21 +351,28 @@ class _WebViewPageState extends State<WebViewPage> {
 
   void fetchStatusAndReason(String url) async {
     try {
-      var response = await http.get(Uri.parse(url));
+      var response = await http.get(Uri.parse(url));     
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
+         print("Response aagyaa: $jsonResponse");
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
+        if(jsonResponse["transactionId"] != null){
+            transactionId = jsonResponse["transactionId"];
+        }
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
-          widget.onPaymentResult(PaymentResultObject("Success"));
+          widget.onPaymentResult(PaymentResultObject("Success",transactionId));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {
+          widget.onPaymentResult(PaymentResultObject("Pending",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
         } else if (status?.toUpperCase().contains("EXPIRED")) {
           showDialog(
               context: context,
@@ -388,7 +413,13 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
+          widget.onPaymentResult(PaymentResultObject("Processing",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
         } else if (status?.toUpperCase().contains("FAILED")) {
+          widget.onPaymentResult(PaymentResultObject("Failed",transactionId));
+          job?.cancel();
+          stopFunctionCalls();
         }
       } else {}
     } catch (e) {
