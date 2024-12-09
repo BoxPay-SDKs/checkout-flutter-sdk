@@ -148,6 +148,8 @@ class Client {
   }
 
   void onPaymentResult(PaymentResultObject object) {
+    print("======object ${object.status}");
+    print("======object ${object.transactionId}");
     if (object.status == "Success") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
