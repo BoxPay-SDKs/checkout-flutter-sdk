@@ -174,6 +174,13 @@ class _WebViewPageState extends State<WebViewPage> {
             completer.complete(false);
           });
         } else {
+          currentUrl = baseUrl;
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
+          widget.onPaymentResult(PaymentResultObject("NOACTION",tokenFetched));
+          job?.cancel();
+          stopFunctionCalls();
           Navigator.of(context).pop();
           return true;
         }
@@ -337,6 +344,7 @@ class _WebViewPageState extends State<WebViewPage> {
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {
+
         } else if (status?.toUpperCase().contains("EXPIRED")) {
           showDialog(
               context: context,
