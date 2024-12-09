@@ -44,6 +44,8 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
+  String statusFetched = "";
+  String tokenFetched = "";
 
   _WebViewPageState({required String referrer}) {
     headers = {'Referer': referrer, 'Origin': referrer};
@@ -169,6 +171,7 @@ class _WebViewPageState extends State<WebViewPage> {
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
+            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
             completer.complete(false);
           });
         } else {
@@ -323,13 +326,15 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
+        statusFetched = status;
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
-          widget.onPaymentResult(PaymentResultObject("Success"));
+              tokenFetched = jsonResponse["transactionId"];
+          widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {

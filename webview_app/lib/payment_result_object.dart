@@ -1,7 +1,9 @@
 class PaymentResultObject {
-  String? result;
+  String? status;
+  String? token;
 
-  PaymentResultObject(String resultFetched) {
-    result = resultFetched;
+  PaymentResultObject(String statusFetched, String tokenFetched) {
+    status = statusFetched;
+    token = tokenFetched;
   }
 }

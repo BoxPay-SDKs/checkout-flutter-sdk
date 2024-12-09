@@ -147,8 +147,8 @@ class Client {
     }
   }
 
-  void onPaymentResult(PaymentResultObject status) {
-    if (status.result == "Success") {
+  void onPaymentResult(PaymentResultObject object) {
+    if (object.status == "Success") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
         context,

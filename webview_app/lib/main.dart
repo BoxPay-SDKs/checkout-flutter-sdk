@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:webview_app/boxpay_checkout.dart';
 import 'package:webview_app/thank_you_page.dart';
@@ -122,9 +124,9 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  void onPaymentResult(PaymentResultObject status) {
-    if (status.result == "Success") {
-      // Close BoxPayCheckout and navigate to thank you page
+  void onPaymentResult(PaymentResultObject object) {
+    log("reuslt $object");
+    if (object.status == "Success") {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ThankYouPage()),
