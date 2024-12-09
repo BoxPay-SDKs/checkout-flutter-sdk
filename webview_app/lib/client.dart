@@ -148,8 +148,11 @@ class Client {
   }
 
   void onPaymentResult(PaymentResultObject object) {
-    print("======object ${object.status}");
-    print("======object ${object.transactionId}");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Status is ${object.status} & transaction id ${object.transactionId}"),
+      ),
+    );
     if (object.status == "Success") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(

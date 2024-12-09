@@ -92,6 +92,7 @@ class _WebViewPageState extends State<WebViewPage> {
             );
             return NavigationDecision.prevent;
           } else if (currentUrl.contains(backUrl)) {
+            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
             Navigator.of(context).pop();
             return NavigationDecision.prevent;
           }
@@ -385,7 +386,9 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
+          tokenFetched = jsonResponse["transactionId"];
         } else if (status?.toUpperCase().contains("FAILED")) {
+          tokenFetched = jsonResponse["transactionId"];
         }
       } else {}
     } catch (e) {

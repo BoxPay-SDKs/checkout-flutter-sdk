@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:webview_app/boxpay_checkout.dart';
 import 'package:webview_app/thank_you_page.dart';
@@ -125,7 +123,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
   void onPaymentResult(PaymentResultObject object) {
-    log("reuslt $object");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Status is ${object.status} & transaction id ${object.transactionId}"),
+      ),
+    );
     if (object.status == "Success") {
       Navigator.pushReplacement(
         context,
