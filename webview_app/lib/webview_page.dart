@@ -171,15 +171,17 @@ class _WebViewPageState extends State<WebViewPage> {
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
-             widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
+            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
             completer.complete(false);
+            Navigator.of(context).pop();
+            return true;
           });
         } else {
           currentUrl = baseUrl;
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
-          widget.onPaymentResult(PaymentResultObject("NOACTION",tokenFetched));
+          widget.onPaymentResult(PaymentResultObject("NOACTION",""));
           job?.cancel();
           stopFunctionCalls();
           Navigator.of(context).pop();
