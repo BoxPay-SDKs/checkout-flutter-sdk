@@ -43,7 +43,7 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
-  var statusFetched  = "";
+  var statusFetched = "";
   var tokenFetched = "";
 
   _WebViewPageState({required String referrer}) {
@@ -92,7 +92,8 @@ class _WebViewPageState extends State<WebViewPage> {
             );
             return NavigationDecision.prevent;
           } else if (currentUrl.contains(backUrl)) {
-            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
+            widget.onPaymentResult(
+                PaymentResultObject(statusFetched, tokenFetched));
             Navigator.of(context).pop();
             return NavigationDecision.prevent;
           }
@@ -131,7 +132,7 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-               if (currentUrl.contains(backUrl) ||
+        if (currentUrl.contains(backUrl) ||
             currentUrl.contains('privacy') ||
             currentUrl.contains('terms-conditions')) {
           return redirectModal(context,
@@ -150,9 +151,9 @@ class _WebViewPageState extends State<WebViewPage> {
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
           currentUrl = baseUrl;
           _controller.loadRequest(
-                  Uri.parse(currentUrl),
-                  headers: headers,
-                );
+            Uri.parse(currentUrl),
+            headers: headers,
+          );
           setState(() {
             _upiTimerModal = false;
           });
@@ -171,17 +172,18 @@ class _WebViewPageState extends State<WebViewPage> {
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
-            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
+            widget.onPaymentResult(
+                PaymentResultObject(statusFetched, tokenFetched));
             completer.complete(false);
             Navigator.of(context).pop();
             return true;
           });
         } else {
           currentUrl = baseUrl;
-            if (await _controller.canGoBack()) {
-              _controller.goBack();
-            }
-          widget.onPaymentResult(PaymentResultObject("NOACTION",""));
+          if (await _controller.canGoBack()) {
+            _controller.goBack();
+          }
+          widget.onPaymentResult(PaymentResultObject("NOACTION", ""));
           job?.cancel();
           stopFunctionCalls();
           Navigator.of(context).pop();
@@ -302,9 +304,9 @@ class _WebViewPageState extends State<WebViewPage> {
         onYesPressed: (Completer<bool> completer) async {
           currentUrl = baseUrl;
           await _controller.loadRequest(
-                  Uri.parse(currentUrl),
-                  headers: headers,
-                );
+            Uri.parse(currentUrl),
+            headers: headers,
+          );
           startFunctionCalls();
           Future.delayed(const Duration(seconds: 1), () {
             isFlagSet = false;
@@ -342,12 +344,11 @@ class _WebViewPageState extends State<WebViewPage> {
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
-              tokenFetched = jsonResponse["transactionId"];
+          tokenFetched = jsonResponse["transactionId"];
           widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {
-
         } else if (status?.toUpperCase().contains("EXPIRED")) {
           showDialog(
               context: context,

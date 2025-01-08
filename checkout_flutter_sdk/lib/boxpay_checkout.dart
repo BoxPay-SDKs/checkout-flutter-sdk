@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
-import 'package:device_apps/device_apps.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checkout_flutter_sdk/webview_page.dart';
+import 'package:appcheck/appcheck.dart';
+
 
 class BoxPayCheckout {
   final BuildContext context;
@@ -88,7 +89,8 @@ class BoxPayCheckout {
   }
 
   Future<bool> isAppInstalled(String packageName) async {
-    final bool isInstalled = await DeviceApps.isAppInstalled(packageName);
+    final appCheck = AppCheck();
+    final bool isInstalled = await appCheck.isAppInstalled(packageName);
     return isInstalled;
   }
 
