@@ -12,11 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.1
-  webview_flutter: ^3.0.4
+  webview_flutter: ^4.9.0
   shared_preferences: ^2.0.0
-  alt_sms_autofill: ^1.0.0
   lottie: ^3.1.0
-  device_apps: ^2.2.0
+  appcheck: ^1.5.2
   url_launcher: ^6.0.9
   cupertino_icons: ^1.0.6
 

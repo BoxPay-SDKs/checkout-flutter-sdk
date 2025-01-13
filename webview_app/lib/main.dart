@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:webview_app/boxpay_checkout.dart';
+import 'package:webview_app/thank_you_page.dart';
+import 'package:webview_app/payment_result_object.dart';
 import 'package:webview_app/client.dart'; // Import the BoxPayCheckout class
 
 void main() {
@@ -62,6 +65,16 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                 Radio<String>(
+                  value: '',
+                  groupValue: _selectedEnv,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedEnv = value!;
+                    });
+                  },
+                ),
+                const Text('Prod'),
                 Radio<String>(
                   value: 'sandbox',
                   groupValue: _selectedEnv,
@@ -71,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   },
                 ),
-                Text('Sandbox'),
+                const Text('Sandbox'),
                 Radio<String>(
                   value: 'test',
                   groupValue: _selectedEnv,
@@ -81,14 +94,18 @@ class _MyHomePageState extends State<MyHomePage> {
                     });
                   },
                 ),
-                Text('Test'),
+                const Text('Test'),
               ],
             ),
             ElevatedButton(
               onPressed: () {
-                String enteredToken = _amountController.text;
-                Client buffer = Client(context);
-                buffer.makePaymentRequest(enteredToken, _selectedEnv);
+                BoxPayCheckout boxPayCheckout = BoxPayCheckout(
+            context: context,
+            token: _amountController.text,
+            onPaymentResult: onPaymentResult,
+            sandboxEnabled: _selectedEnv == "sandbox");
+            boxPayCheckout.test = _selectedEnv == "test";
+            boxPayCheckout.display();
               },
               child: const Text('Open Checkout by entering token'),
             ),
@@ -96,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Client buffer = Client(context);
                 _selectedEnv = "test";
-                buffer.makePaymentRequest(null , _selectedEnv);
+                buffer.makePaymentRequest(null , "test");
               },
               child: const Text('Open Checkout by default token'),
             ),
@@ -104,5 +121,18 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+  void onPaymentResult(PaymentResultObject object) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Status is ${object.status} & transaction id ${object.transactionId}"),
+      ),
+    );
+    if (object.status == "Success") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ThankYouPage()),
+      );
+    }
   }
 }

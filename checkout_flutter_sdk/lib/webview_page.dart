@@ -1,17 +1,15 @@
-import 'dart:io';
 import 'package:checkout_flutter_sdk/dialogs/redirect_modal.dart';
 import 'package:checkout_flutter_sdk/loader_sheet.dart';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'package:checkout_flutter_sdk/custom_appbar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import 'dart:core';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 
 Timer? job;
@@ -46,12 +44,11 @@ class _WebViewPageState extends State<WebViewPage> {
   late Map<String, String> headers;
   String baseUrl = "";
   bool _upiTimerModal = false;
+  String statusFetched = "";
+  String tokenFetched = "";
 
   _WebViewPageState({required String referrer}) {
-    headers = {
-      'Referer': referrer,
-      'Origin': referrer
-    };
+    headers = {'Referer': referrer, 'Origin': referrer};
   }
 
   @override
@@ -63,13 +60,52 @@ class _WebViewPageState extends State<WebViewPage> {
     _isFirstRender = true;
     fetchReturnUrl();
     timerModalListener();
-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (String url) {
+          setState(() {
+            currentUrl = url;
+          });
+        },
+        onPageFinished: (String url) {
+          setState(() {
+            currentUrl = url;
+          });
+          Future.delayed(const Duration(milliseconds: 200), () {
+            setState(() {
+              _isFirstRender = false;
+            });
+          });
+        },
+        onNavigationRequest: (NavigationRequest request) async {
+          currentUrl = request.url;
+          if (currentUrl.contains("pns")) {
+            // handlePaymentFailure(context);
+          } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
+            launchUPIIntentURL(currentUrl);
+            return NavigationDecision.prevent;
+          } else if (currentUrl == 'https://www.boxpay.tech/') {
+            currentUrl = baseUrl;
+            await _controller.loadRequest(
+              Uri.parse(currentUrl),
+              headers: headers,
+            );
+            return NavigationDecision.prevent;
+          } else if (currentUrl.contains(backUrl)) {
+            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
+            Navigator.of(context).pop();
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
+      ));
+    _controller.loadRequest(Uri.parse(baseUrl), headers: headers);
   }
 
   @override
   void dispose() {
     stopFunctionCalls();
-    AltSmsAutofill().unregisterListener();
     modalCheckTimer?.cancel();
     super.dispose();
   }
@@ -96,7 +132,7 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        if (currentUrl.contains(backUrl) ||
+               if (currentUrl.contains(backUrl) ||
             currentUrl.contains('privacy') ||
             currentUrl.contains('terms-conditions')) {
           return redirectModal(context,
@@ -114,7 +150,10 @@ class _WebViewPageState extends State<WebViewPage> {
           });
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
           currentUrl = baseUrl;
-          _controller.loadUrl(currentUrl, headers: headers);
+          _controller.loadRequest(
+                  Uri.parse(currentUrl),
+                  headers: headers,
+                );
           setState(() {
             _upiTimerModal = false;
           });
@@ -133,9 +172,19 @@ class _WebViewPageState extends State<WebViewPage> {
             if (await _controller.canGoBack()) {
               _controller.goBack();
             }
+            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
             completer.complete(false);
+            Navigator.of(context).pop();
+            return true;
           });
         } else {
+          currentUrl = baseUrl;
+            if (await _controller.canGoBack()) {
+              _controller.goBack();
+            }
+          widget.onPaymentResult(PaymentResultObject("NOACTION",""));
+          job?.cancel();
+          stopFunctionCalls();
           Navigator.of(context).pop();
           return true;
         }
@@ -147,63 +196,7 @@ class _WebViewPageState extends State<WebViewPage> {
         body: SafeArea(
           child: Stack(
             children: [
-              Scaffold(
-                body: WebView(
-                  onWebViewCreated: (WebViewController webViewController) {
-                    webViewController.loadUrl(baseUrl, headers: headers);
-                    _controller = webViewController;
-                    currentUrl = baseUrl;
-                  },
-                  javascriptChannels: <JavascriptChannel>{
-                    JavascriptChannel(
-                        name: 'upiTimerModal',
-                        onMessageReceived: (JavascriptMessage message) {
-                          if (message.message == "true") {
-                            setState(() {
-                              _upiTimerModal = true;
-                            });
-                          } else {
-                            setState(() {
-                              _upiTimerModal = false;
-                            });
-                          }
-                        }),
-                  },
-                  onPageStarted: (String url) {
-                    setState(() {
-                      currentUrl = url;
-                    });
-                  },
-                  onPageFinished: (String url) async {
-                    setState(() {
-                      currentUrl = url;
-                    });
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    setState(() {
-                      _isFirstRender = false;
-                    });
-                  },
-                  javascriptMode: JavascriptMode.unrestricted,
-                  navigationDelegate: (NavigationRequest request) async {
-                    currentUrl = request.url;
-                    if (currentUrl.contains("pns")) {
-                      handlePaymentFailure(context);
-                    } else if (currentUrl.contains("pay?") &&
-                        currentUrl.contains("pa")) {
-                      launchUPIIntentURL(currentUrl);
-                      return NavigationDecision.prevent;
-                    } else if (currentUrl == 'https://www.boxpay.tech/') {
-                      currentUrl = baseUrl;
-                      await _controller.loadUrl(currentUrl, headers: headers);
-                      return NavigationDecision.prevent;
-                    } else if (currentUrl.contains(backUrl)) {
-                      Navigator.of(context).pop();
-                      return NavigationDecision.prevent;
-                    }
-                    return NavigationDecision.navigate;
-                  },
-                ),
-              ),
+              WebViewWidget(controller: _controller),
               if (_isFirstRender || _isIntentLaunch)
                 const Center(
                   child: LoaderSheet(),
@@ -216,10 +209,8 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void launchUPIIntentURL(String upiURL) async {
-    // ignore: deprecated_member_use
-    if (await canLaunch(upiURL)) {
-      // ignore: deprecated_member_use
-      await launch(upiURL);
+    if (await canLaunchUrlString(upiURL)) {
+      await launchUrlString(upiURL);
       setState(() {
         _isIntentLaunch = true;
       });
@@ -242,7 +233,7 @@ class _WebViewPageState extends State<WebViewPage> {
         Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
       if (currentUrl.contains("hmh")) {
         // ignore: deprecated_member_use
-        await _controller.evaluateJavascript('''
+        await _controller.runJavaScript('''
               var modal = document.querySelector('.upiModal');
 
               if(modal){
@@ -311,7 +302,10 @@ class _WebViewPageState extends State<WebViewPage> {
         yesButtonText: "Retry",
         onYesPressed: (Completer<bool> completer) async {
           currentUrl = baseUrl;
-          await _controller.loadUrl(currentUrl, headers: headers);
+          await _controller.loadRequest(
+                  Uri.parse(currentUrl),
+                  headers: headers,
+                );
           startFunctionCalls();
           Future.delayed(const Duration(seconds: 1), () {
             isFlagSet = false;
@@ -342,13 +336,15 @@ class _WebViewPageState extends State<WebViewPage> {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
+        statusFetched = status;
         if (status?.toUpperCase().contains("APPROVED") ||
             statusReason
                 ?.toUpperCase()
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
-          widget.onPaymentResult(PaymentResultObject("Success"));
+              tokenFetched = jsonResponse["transactionId"];
+          widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase().contains("PENDING")) {
@@ -392,7 +388,9 @@ class _WebViewPageState extends State<WebViewPage> {
                 );
               });
         } else if (status?.toUpperCase().contains("PROCESSING")) {
+          tokenFetched = jsonResponse["transactionId"];
         } else if (status?.toUpperCase().contains("FAILED")) {
+          tokenFetched = jsonResponse["transactionId"];
         }
       } else {}
     } catch (e) {

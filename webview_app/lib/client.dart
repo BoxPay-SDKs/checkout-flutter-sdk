@@ -13,16 +13,16 @@ class Client {
 
   Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
-        "https://test-apis.boxpay.tech/v0/merchants/k14ut9k7gQ/sessions");
+        "https://test-apis.boxpay.tech/v0/merchants/lGfqzNSKKA/sessions");
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Authorization':
-          'Bearer bXj9R23osaf70w00Rn2RXFVOUpis6sn1XNPWkDu8g9tpwjP4hZThKqS38iA6E931qbm3bXGLKQJ7scZaufrMvq',
+          'Bearer 3z3G6PT8vDhxQCKRQzmRsujsO5xtsQAYLUR3zcKrPwVrphfAqfyS20bvvCg2X95APJsT5UeeS5YdD41aHbz6mg',
     };
     final Map<String, dynamic> jsonData = {
       "context": {
         "countryCode": "IN",
-        "legalEntity": {"code": "boxpay"},
+        "legalEntity": {"code": "razorpay"},
         "orderId": "test12"
       },
       "paymentType": "S",
@@ -127,17 +127,14 @@ class Client {
         if (enteredToken != null) {
           tokenFetched = enteredToken;
         }
-        bool sandboxflag = false;
-        if (envSelected == "sandbox") {
-          sandboxflag = true;
-        }
+  
         print("tokenn : $tokenFetched");
-        print("sandboxflag $sandboxflag");
         BoxPayCheckout boxPayCheckout = BoxPayCheckout(
             context: context,
             token: tokenFetched,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: sandboxflag);
+            sandboxEnabled: envSelected == "sandbox");
+            boxPayCheckout.test = envSelected == "test";
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');
@@ -150,8 +147,13 @@ class Client {
     }
   }
 
-  void onPaymentResult(PaymentResultObject status) {
-    if (status.result == "Success") {
+  void onPaymentResult(PaymentResultObject object) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Status is ${object.status} & transaction id ${object.transactionId}"),
+      ),
+    );
+    if (object.status == "Success") {
       // Close BoxPayCheckout and navigate to thank you page
       Navigator.pushReplacement(
         context,
