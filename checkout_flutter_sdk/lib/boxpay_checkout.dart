@@ -7,18 +7,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checkout_flutter_sdk/webview_page.dart';
 import 'package:appcheck/appcheck.dart';
 
-
 class BoxPayCheckout {
   final BuildContext context;
   final String token;
+  String shopperToken;
   final Function(PaymentResultObject) onPaymentResult;
   bool sandboxEnabled;
   late String env;
   bool test = false;
 
-  BoxPayCheckout(
+ BoxPayCheckout(
       {required this.context,
       required this.token,
+      this.shopperToken = "",
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
@@ -64,6 +65,7 @@ class BoxPayCheckout {
             env: env,
             upiApps: upiApps,
             referrer: referrer,
+             shopperToken: shopperToken,
           ),
         ),
       );

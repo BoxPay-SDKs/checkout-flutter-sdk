@@ -1,5 +1,6 @@
 name: webview_app
 description: "A new Flutter project."
+publish_to: none
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 # publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -40,6 +41,8 @@ dependencies:
   webview_flutter: ^4.9.0
   url_launcher: ^6.0.9
   appcheck: ^1.5.2
+  checkout_flutter_sdk:
+    path: ../checkout_flutter_sdk
 
 dev_dependencies:
   flutter_test:

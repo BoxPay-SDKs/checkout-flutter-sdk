@@ -18,6 +18,7 @@ bool isFlagSet = false;
 
 class WebViewPage extends StatefulWidget {
   final String token;
+  final String shopperToken;
   final Function(PaymentResultObject) onPaymentResult;
   final String env;
   final String upiApps;
@@ -26,6 +27,7 @@ class WebViewPage extends StatefulWidget {
   const WebViewPage(
       {super.key,
       required this.token,
+      this.shopperToken = "",
       required this.onPaymentResult,
       required this.env,
       required this.upiApps,
@@ -46,62 +48,86 @@ class _WebViewPageState extends State<WebViewPage> {
   bool _upiTimerModal = false;
   String statusFetched = "";
   String tokenFetched = "";
-
+  bool shopperTokenFetched = false;
+  
   _WebViewPageState({required String referrer}) {
     headers = {'Referer': referrer, 'Origin': referrer};
   }
 
   @override
   void initState() {
-    super.initState();
-    createBaseUrl();
-    startFunctionCalls();
-    isFlagSet = false;
-    _isFirstRender = true;
-    fetchReturnUrl();
-    timerModalListener();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (String url) {
+  super.initState();
+  createBaseUrl();
+  startFunctionCalls();
+  isFlagSet = false;
+  _isFirstRender = true;
+  fetchReturnUrl();
+  timerModalListener();
+
+  _controller = WebViewController()
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setNavigationDelegate(NavigationDelegate(
+      onPageStarted: (String url) {
+        setState(() {
+          currentUrl = url;
+        });
+      },
+      onPageFinished: (String url) {
+        setState(() {
+          currentUrl = url;
+        });
+        Future.delayed(const Duration(milliseconds: 200), () {
           setState(() {
-            currentUrl = url;
+            _isFirstRender = false;
           });
-        },
-        onPageFinished: (String url) {
-          setState(() {
-            currentUrl = url;
-          });
-          Future.delayed(const Duration(milliseconds: 200), () {
-            setState(() {
-              _isFirstRender = false;
-            });
-          });
-        },
-        onNavigationRequest: (NavigationRequest request) async {
-          currentUrl = request.url;
-          if (currentUrl.contains("pns")) {
-            // handlePaymentFailure(context);
-          } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
-            launchUPIIntentURL(currentUrl);
-            return NavigationDecision.prevent;
-          } else if (currentUrl == 'https://www.boxpay.tech/') {
-            currentUrl = baseUrl;
-            await _controller.loadRequest(
-              Uri.parse(currentUrl),
-              headers: headers,
-            );
-            return NavigationDecision.prevent;
-          } else if (currentUrl.contains(backUrl)) {
-            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
-            Navigator.of(context).pop();
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-      ));
-    _controller.loadRequest(Uri.parse(baseUrl), headers: headers);
-  }
+        });
+
+        // Inject and submit form if shopperToken is available
+        if (widget.shopperToken.isNotEmpty && !shopperTokenFetched) {
+          String formSubmissionScript = '''
+            (function() {
+              var form = document.createElement('form');
+              form.action = '$baseUrl';
+              form.method = 'POST';
+              var input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = 'shopper_token';
+              input.value = '${widget.shopperToken}';
+              form.appendChild(input);
+              document.body.appendChild(form);
+              form.submit();
+            })();
+          ''';
+          shopperTokenFetched = true;
+          _controller.runJavaScript(formSubmissionScript);
+        }
+      },
+      onNavigationRequest: (NavigationRequest request) async {
+        currentUrl = request.url;
+        if (currentUrl.contains("pns")) {
+          // handlePaymentFailure(context);
+        } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
+          launchUPIIntentURL(currentUrl);
+          return NavigationDecision.prevent;
+        } else if (currentUrl == 'https://www.boxpay.tech/') {
+          currentUrl = baseUrl;
+          await _controller.loadRequest(
+            Uri.parse(currentUrl),
+            headers: headers,
+          );
+          return NavigationDecision.prevent;
+        } else if (currentUrl.contains(backUrl)) {
+          widget.onPaymentResult(
+              PaymentResultObject(statusFetched, tokenFetched));
+          Navigator.of(context).pop();
+          return NavigationDecision.prevent;
+        }
+        return NavigationDecision.navigate;
+      },
+    ));
+
+  _controller.loadRequest(Uri.parse(baseUrl), headers: headers);
+}
 
   @override
   void dispose() {
@@ -158,7 +184,7 @@ class _WebViewPageState extends State<WebViewPage> {
             _upiTimerModal = false;
           });
           return false;
-        } else if (!currentUrl.contains('hmh')) {
+        } else if (currentUrl.contains('hmh')) {
           return redirectModal(context,
               title: "Cancel Payment",
               content:
@@ -171,22 +197,24 @@ class _WebViewPageState extends State<WebViewPage> {
             currentUrl = baseUrl;
             if (await _controller.canGoBack()) {
               _controller.goBack();
+            } else {
+              widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
+              completer.complete(false);
+              Navigator.of(context).pop();
             }
-            widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
-            completer.complete(false);
-            Navigator.of(context).pop();
-            return true;
+            return false;
           });
         } else {
           currentUrl = baseUrl;
             if (await _controller.canGoBack()) {
               _controller.goBack();
+            } else {
+               widget.onPaymentResult(PaymentResultObject("NOACTION",""));
+              job?.cancel();
+              stopFunctionCalls();
+              Navigator.of(context).pop();
             }
-          widget.onPaymentResult(PaymentResultObject("NOACTION",""));
-          job?.cancel();
-          stopFunctionCalls();
-          Navigator.of(context).pop();
-          return true;
+          return false;
         }
       },
       child: Scaffold(
