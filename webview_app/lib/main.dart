@@ -31,12 +31,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _shopperTokenController = TextEditingController();
   String _selectedEnv = 'test';
 
   @override
   void dispose() {
     // Dispose the controller when the widget is disposed to avoid memory leaks
     _amountController.dispose();
+    _shopperTokenController.dispose();
     super.dispose();
   }
 
@@ -58,6 +60,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 decoration: const InputDecoration(
                   hintText:
                       'Enter token', // Placeholder text for the input field
+                  border: OutlineInputBorder(), // Add border to the input field
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller:
+                    _shopperTokenController, // Assign the controller to the TextField
+                decoration: const InputDecoration(
+                  hintText:
+                      'Enter shopper token', // Placeholder text for the input field
                   border: OutlineInputBorder(), // Add border to the input field
                 ),
               ),
@@ -103,7 +117,8 @@ class _MyHomePageState extends State<MyHomePage> {
             context: context,
             token: _amountController.text,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: _selectedEnv == "sandbox");
+            sandboxEnabled: _selectedEnv == "sandbox",
+            shopperToken: _shopperTokenController.text);
             boxPayCheckout.test = _selectedEnv == "test";
             boxPayCheckout.display();
               },

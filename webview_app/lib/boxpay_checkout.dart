@@ -10,6 +10,7 @@ import 'package:appcheck/appcheck.dart';
 class BoxPayCheckout {
   final BuildContext context;
   final String token;
+  String shopperToken;
   final Function(PaymentResultObject) onPaymentResult;
   bool sandboxEnabled;
   late String env;
@@ -18,6 +19,7 @@ class BoxPayCheckout {
   BoxPayCheckout(
       {required this.context,
       required this.token,
+      this.shopperToken = "",
       required this.onPaymentResult,
       bool? sandboxEnabled})
       : sandboxEnabled = sandboxEnabled ?? false,
@@ -63,6 +65,7 @@ class BoxPayCheckout {
             env: env,
             upiApps: upiApps,
             referrer: referrer,
+            shopperToken: shopperToken,
           ),
         ),
       );

@@ -117,13 +117,15 @@ class Client {
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
       "frontendReturnUrl": "https://www.boxpay.tech",
-      "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/"
+      "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/",
+      "createShopperToken":"true"
     };
     try {
       final response =
           await http.post(url, headers: headers, body: jsonEncode(jsonData));
       if (response.statusCode == 201) {
         var tokenFetched = jsonDecode(response.body)['token'];
+        var shopperToken = jsonDecode(response.body)['payload']?['shopper_token'] ?? "";
         if (enteredToken != null) {
           tokenFetched = enteredToken;
         }
@@ -133,7 +135,8 @@ class Client {
             context: context,
             token: tokenFetched,
             onPaymentResult: onPaymentResult,
-            sandboxEnabled: envSelected == "sandbox");
+            sandboxEnabled: envSelected == "sandbox",
+            shopperToken: shopperToken);
             boxPayCheckout.test = envSelected == "test";
         await boxPayCheckout.display();
       } else {
