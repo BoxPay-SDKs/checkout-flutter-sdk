@@ -1,0 +1,4 @@
+enum ConfigurationOptions {
+  showUpiQrOnLoad,
+  enableSandboxEnv,
+}

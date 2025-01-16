@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:checkout_flutter_sdk/boxpay_checkout.dart';
 import 'package:webview_app/thank_you_page.dart';
 import 'package:checkout_flutter_sdk/payment_result_object.dart';
+import 'package:checkout_flutter_sdk/configuration_options.dart';
 import 'package:webview_app/client.dart'; // Import the BoxPayCheckout class
 
 void main() {
@@ -33,6 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _shopperTokenController = TextEditingController();
   String _selectedEnv = 'test';
+  bool _qrLoadVisible = false;
 
   @override
   void dispose() {
@@ -79,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                 Radio<String>(
+                Radio<String>(
                   value: '',
                   groupValue: _selectedEnv,
                   onChanged: (value) {
@@ -111,24 +113,44 @@ class _MyHomePageState extends State<MyHomePage> {
                 const Text('Test'),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: _qrLoadVisible,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _qrLoadVisible = value ?? false;
+                    });
+                  },
+                ),
+                const Text('QR Visible on Load'),
+              ],
+            ),
             ElevatedButton(
               onPressed: () {
                 BoxPayCheckout boxPayCheckout = BoxPayCheckout(
-            context: context,
-            token: _amountController.text,
-            onPaymentResult: onPaymentResult,
-            sandboxEnabled: _selectedEnv == "sandbox",
-            shopperToken: _shopperTokenController.text);
-            boxPayCheckout.test = _selectedEnv == "test";
-            boxPayCheckout.display();
+                  context: context,
+                  token: _amountController.text,
+                  onPaymentResult: onPaymentResult,
+                  shopperToken: _shopperTokenController.text,
+                  configurationOptions: {
+                    ConfigurationOptions.enableSandboxEnv:
+                        _selectedEnv == "sandbox",
+                    ConfigurationOptions.showUpiQrOnLoad: _qrLoadVisible,
+                  },
+                );
+
+                boxPayCheckout.test = _selectedEnv == "test";
+                boxPayCheckout.display();
               },
               child: const Text('Open Checkout by entering token'),
             ),
             ElevatedButton(
               onPressed: () {
-                Client buffer = Client(context);
+                Client buffer = Client(context, _qrLoadVisible);
                 _selectedEnv = "test";
-                buffer.makePaymentRequest(null , "test");
+                buffer.makePaymentRequest(null, "test");
               },
               child: const Text('Open Checkout by default token'),
             ),
@@ -137,10 +159,12 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
   void onPaymentResult(PaymentResultObject object) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Status is ${object.status} & transaction id ${object.transactionId}"),
+        content: Text(
+            "Status is ${object.status} & transaction id ${object.transactionId}"),
       ),
     );
     if (object.status == "Success") {

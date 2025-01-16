@@ -6,28 +6,33 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checkout_flutter_sdk/webview_page.dart';
 import 'package:appcheck/appcheck.dart';
+import 'configuration_options.dart';
 
 class BoxPayCheckout {
   final BuildContext context;
   final String token;
   String shopperToken;
   final Function(PaymentResultObject) onPaymentResult;
-  bool sandboxEnabled;
+  final Map<ConfigurationOptions, dynamic>? configurationOptions;
   late String env;
   bool test = false;
 
- BoxPayCheckout(
-      {required this.context,
-      required this.token,
-      this.shopperToken = "",
-      required this.onPaymentResult,
-      bool? sandboxEnabled})
-      : sandboxEnabled = sandboxEnabled ?? false,
-        env = sandboxEnabled == true ? "sandbox-" : "";
+  BoxPayCheckout({
+    required this.context,
+    required this.token,
+    this.shopperToken = "",
+    required this.onPaymentResult,
+    this.configurationOptions,
+  }) {
+    // Determine the environment based on configuration options
+    env = _getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
+        ? "sandbox-"
+        : "";
+  }
 
   Future<void> display() async {
     try {
-      final responseData = await fetchSessionDataFromApi(token, test);
+      final responseData = await fetchSessionDataFromApi(token);
       final referrer = extractReferer(responseData);
       final merchantDetails = extractMerchantDetails(responseData);
       final backurl = extractBackURL(responseData);
@@ -49,6 +54,11 @@ class BoxPayCheckout {
         foundApps.add("pp=1");
       }
 
+      // Check for `showUpiQrOnLoad` configuration
+      if (_getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false)) {
+        foundApps.add("uq=1");
+      }
+
       String upiApps = "";
       if (foundApps.isNotEmpty) {
         upiApps = foundApps.join('&');
@@ -65,7 +75,7 @@ class BoxPayCheckout {
             env: env,
             upiApps: upiApps,
             referrer: referrer,
-             shopperToken: shopperToken,
+            shopperToken: shopperToken,
           ),
         ),
       );
@@ -96,18 +106,17 @@ class BoxPayCheckout {
     return isInstalled;
   }
 
-  Future<String> fetchSessionDataFromApi(String token, bool test) async {
-    String domain;
-    if (sandboxEnabled) {
-      env = "sandbox-";
-      domain = "tech";
-    } else if(test) {
-      env = "test-";
-      domain = "tech";
-    } else {
-      env = "";
-      domain = "in";
-    }
+  Future<String> fetchSessionDataFromApi(String token) async {
+    env = test
+        ? "test-"
+        : (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
+            ? "sandbox-"
+            : "");
+    String domain = test
+        ? "tech"
+        : (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
+            ? "tech"
+            : "in");
     final apiUrl =
         'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token';
     try {
@@ -151,4 +160,8 @@ class BoxPayCheckout {
     return '';
   }
 
+  /// Helper method to retrieve configuration values with a default fallback
+  T _getConfigurationValue<T>(ConfigurationOptions key, T defaultValue) {
+    return configurationOptions?[key] as T? ?? defaultValue;
+  }
 }
