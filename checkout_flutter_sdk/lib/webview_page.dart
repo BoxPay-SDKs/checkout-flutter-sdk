@@ -11,7 +11,6 @@ import 'dart:async';
 import 'dart:core';
 import 'package:url_launcher/url_launcher_string.dart';
 
-
 Timer? job;
 Timer? modalCheckTimer;
 bool isFlagSet = false;
@@ -49,42 +48,42 @@ class _WebViewPageState extends State<WebViewPage> {
   String statusFetched = "";
   String tokenFetched = "";
   bool shopperTokenFetched = false;
-  
+
   _WebViewPageState({required String referrer}) {
     headers = {'Referer': referrer, 'Origin': referrer};
   }
 
   @override
   void initState() {
-  super.initState();
-  createBaseUrl();
-  startFunctionCalls();
-  isFlagSet = false;
-  _isFirstRender = true;
-  fetchReturnUrl();
-  timerModalListener();
+    super.initState();
+    createBaseUrl();
+    startFunctionCalls();
+    isFlagSet = false;
+    _isFirstRender = true;
+    fetchReturnUrl();
+    timerModalListener();
 
-  _controller = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setNavigationDelegate(NavigationDelegate(
-      onPageStarted: (String url) {
-        setState(() {
-          currentUrl = url;
-        });
-      },
-      onPageFinished: (String url) {
-        setState(() {
-          currentUrl = url;
-        });
-        Future.delayed(const Duration(milliseconds: 200), () {
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageStarted: (String url) {
           setState(() {
-            _isFirstRender = false;
+            currentUrl = url;
           });
-        });
+        },
+        onPageFinished: (String url) {
+          setState(() {
+            currentUrl = url;
+          });
+          Future.delayed(const Duration(milliseconds: 200), () {
+            setState(() {
+              _isFirstRender = false;
+            });
+          });
 
-        // Inject and submit form if shopperToken is available
-        if (widget.shopperToken.isNotEmpty && !shopperTokenFetched) {
-          String formSubmissionScript = '''
+          // Inject and submit form if shopperToken is available
+          if (widget.shopperToken.isNotEmpty && !shopperTokenFetched) {
+            String formSubmissionScript = '''
             (function() {
               var form = document.createElement('form');
               form.action = '$baseUrl';
@@ -98,36 +97,36 @@ class _WebViewPageState extends State<WebViewPage> {
               form.submit();
             })();
           ''';
-          shopperTokenFetched = true;
-          _controller.runJavaScript(formSubmissionScript);
-        }
-      },
-      onNavigationRequest: (NavigationRequest request) async {
-        currentUrl = request.url;
-        if (currentUrl.contains("pns")) {
-          // handlePaymentFailure(context);
-        } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
-          launchUPIIntentURL(currentUrl);
-          return NavigationDecision.prevent;
-        } else if (currentUrl == 'https://www.boxpay.tech/') {
-          currentUrl = baseUrl;
-          await _controller.loadRequest(
-            Uri.parse(currentUrl),
-            headers: headers,
-          );
-          return NavigationDecision.prevent;
-        } else if (currentUrl.contains(backUrl)) {
-          widget.onPaymentResult(
-              PaymentResultObject(statusFetched, tokenFetched));
-          Navigator.of(context).pop();
-          return NavigationDecision.prevent;
-        }
-        return NavigationDecision.navigate;
-      },
-    ));
+            shopperTokenFetched = true;
+            _controller.runJavaScript(formSubmissionScript);
+          }
+        },
+        onNavigationRequest: (NavigationRequest request) async {
+          currentUrl = request.url;
+          if (currentUrl.contains("pns")) {
+            // handlePaymentFailure(context);
+          } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
+            launchUPIIntentURL(currentUrl);
+            return NavigationDecision.prevent;
+          } else if (currentUrl == 'https://www.boxpay.tech/') {
+            currentUrl = baseUrl;
+            await _controller.loadRequest(
+              Uri.parse(currentUrl),
+              headers: headers,
+            );
+            return NavigationDecision.prevent;
+          } else if (currentUrl.contains(backUrl)) {
+            widget.onPaymentResult(
+                PaymentResultObject(statusFetched, tokenFetched));
+            Navigator.of(context).pop();
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
+      ));
 
-  _controller.loadRequest(Uri.parse(baseUrl), headers: headers);
-}
+    _controller.loadRequest(Uri.parse(baseUrl), headers: headers);
+  }
 
   @override
   void dispose() {
@@ -158,7 +157,7 @@ class _WebViewPageState extends State<WebViewPage> {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-               if (currentUrl.contains(backUrl) ||
+        if (currentUrl.contains(backUrl) ||
             currentUrl.contains('privacy') ||
             currentUrl.contains('terms-conditions')) {
           return redirectModal(context,
@@ -177,9 +176,9 @@ class _WebViewPageState extends State<WebViewPage> {
         } else if (_upiTimerModal && currentUrl.contains('hmh')) {
           currentUrl = baseUrl;
           _controller.loadRequest(
-                  Uri.parse(currentUrl),
-                  headers: headers,
-                );
+            Uri.parse(currentUrl),
+            headers: headers,
+          );
           setState(() {
             _upiTimerModal = false;
           });
@@ -195,26 +194,24 @@ class _WebViewPageState extends State<WebViewPage> {
             completer.complete(false);
           }, onYesPressed: (Completer<bool> completer) async {
             currentUrl = baseUrl;
-            if (await _controller.canGoBack()) {
-              _controller.goBack();
-            } else {
-              widget.onPaymentResult(PaymentResultObject(statusFetched, tokenFetched));
-              completer.complete(false);
-              Navigator.of(context).pop();
-            }
-            return false;
+            widget.onPaymentResult(
+                PaymentResultObject(statusFetched, tokenFetched));
+            completer.complete(true);
+            Navigator.of(context).pop();
+            return true;
           });
         } else {
           currentUrl = baseUrl;
-            if (await _controller.canGoBack()) {
-              _controller.goBack();
-            } else {
-               widget.onPaymentResult(PaymentResultObject("NOACTION",""));
-              job?.cancel();
-              stopFunctionCalls();
-              Navigator.of(context).pop();
-            }
-          return false;
+          if (await _controller.canGoBack()) {
+            _controller.goBack();
+            return false;
+          } else {
+            widget.onPaymentResult(PaymentResultObject("NOACTION", ""));
+            job?.cancel();
+            stopFunctionCalls();
+            Navigator.of(context).pop();
+            return true;
+          }
         }
       },
       child: Scaffold(
@@ -331,9 +328,9 @@ class _WebViewPageState extends State<WebViewPage> {
         onYesPressed: (Completer<bool> completer) async {
           currentUrl = baseUrl;
           await _controller.loadRequest(
-                  Uri.parse(currentUrl),
-                  headers: headers,
-                );
+            Uri.parse(currentUrl),
+            headers: headers,
+          );
           startFunctionCalls();
           Future.delayed(const Duration(seconds: 1), () {
             isFlagSet = false;
@@ -371,7 +368,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
             statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
             status?.toUpperCase()?.contains("PAID")) {
-              tokenFetched = jsonResponse["transactionId"];
+          tokenFetched = jsonResponse["transactionId"];
           widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
