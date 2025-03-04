@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:checkout_flutter_sdk/payment_result_object.dart';
+import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:checkout_flutter_sdk/webview_page.dart';
+import 'package:boxpay_checkout_flutter_sdk/webview_page.dart';
 import 'package:appcheck/appcheck.dart';
 import 'configuration_options.dart';
 

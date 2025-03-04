@@ -1,7 +1,7 @@
-name: checkout_flutter_sdk
-description: "Boxpay Web View sdk."
-version: 1.0.6-beta1
-homepage:
+name: boxpay_checkout_flutter_sdk
+description: "Boxpay Checkout SDK."
+version: 1.0.6
+homepage: https://developers.boxpay.tech/docs/checkout-integration/checkout-sdks/flutter-checkout-sdk/
 repository: https://github.com/BoxPay-SDKs/checkout-flutter-sdk.git
 
 environment:

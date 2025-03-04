@@ -1,8 +1,8 @@
-import 'package:checkout_flutter_sdk/dialogs/redirect_modal.dart';
-import 'package:checkout_flutter_sdk/loader_sheet.dart';
-import 'package:checkout_flutter_sdk/payment_result_object.dart';
+import 'package:boxpay_checkout_flutter_sdk/dialogs/redirect_modal.dart';
+import 'package:boxpay_checkout_flutter_sdk/loader_sheet.dart';
+import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
-import 'package:checkout_flutter_sdk/custom_appbar.dart';
+import 'package:boxpay_checkout_flutter_sdk/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -415,7 +415,7 @@ class _WebViewPageState extends State<WebViewPage> {
         }
       } else {}
     } catch (e) {
-      print("Error occurred: $e");
+      // no op
     }
   }
 }
