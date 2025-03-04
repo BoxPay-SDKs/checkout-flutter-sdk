@@ -145,11 +145,10 @@ class _WebViewPageState extends State<WebViewPage> {
 
     if (widget.upiApps.isNotEmpty) {
       baseUrl =
-          'https://3268-103-240-235-255.ngrok-free.app/?token=${widget.token}&hmh=1&${widget.upiApps}';
+          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1&${widget.upiApps}';
     } else {
       baseUrl =
-          // 'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
-          'https://3268-103-240-235-255.ngrok-free.app/?token=${widget.token}&hmh=1';
+          'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
   }
 
