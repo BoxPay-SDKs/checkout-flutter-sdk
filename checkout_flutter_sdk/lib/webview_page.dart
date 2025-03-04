@@ -265,10 +265,6 @@ class _WebViewPageState extends State<WebViewPage> {
                 setTimeout(function() {
                     window.upiTimerModal.postMessage('true');
                   }, 500);
-              }else{
-                setTimeout(function() {
-                    window.upiTimerModal.postMessage('false');
-                  }, 500);
               }
         ''');
       }
