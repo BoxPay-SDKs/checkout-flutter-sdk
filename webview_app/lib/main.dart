@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:checkout_flutter_sdk/boxpay_checkout.dart';
+import 'package:boxpay_checkout_flutter_sdk/boxpay_checkout.dart';
 import 'package:webview_app/thank_you_page.dart';
-import 'package:checkout_flutter_sdk/payment_result_object.dart';
-import 'package:checkout_flutter_sdk/configuration_options.dart';
+import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
+import 'package:boxpay_checkout_flutter_sdk/configuration_options.dart';
 import 'package:webview_app/client.dart'; // Import the BoxPayCheckout class
 
 void main() {

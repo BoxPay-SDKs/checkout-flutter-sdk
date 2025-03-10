@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:checkout_flutter_sdk/checkout_flutter_sdk.dart';
+import 'package:boxpay_checkout_flutter_sdk/checkout_flutter_sdk.dart';
 
 void main() {
   test('adds one to input values', () {

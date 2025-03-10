@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:checkout_flutter_sdk/custom_appbar.dart';
+import 'package:boxpay_checkout_flutter_sdk/custom_appbar.dart';
 
 class ThankYouPage extends StatelessWidget {
   const ThankYouPage({super.key});

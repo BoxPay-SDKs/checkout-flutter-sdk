@@ -25,19 +25,19 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
-              contentPadding: const EdgeInsets.fromLTRB(
-                  24, 16, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    onNoPressed(completer);
-                    Navigator.of(context).pop(false);
-                  },
-                  child: Text(noButtonText,
-                      style: const TextStyle(color: Colors.black)),
-                ),
+                if (noButtonText.isNotEmpty)
+                  TextButton(
+                    onPressed: () {
+                      onNoPressed(completer);
+                      Navigator.of(context).pop(false);
+                    },
+                    child: Text(noButtonText,
+                        style: const TextStyle(color: Colors.black)),
+                  ),
                 TextButton(
                   onPressed: () {
                     onYesPressed(completer);
@@ -52,19 +52,19 @@ Future<bool> redirectModal(
               title: Text(title),
               content: Text(content),
               backgroundColor: Colors.white,
-              contentPadding: const EdgeInsets.fromLTRB(
-                  24, 16, 24, 16),
+              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    onNoPressed(completer);
-                    Navigator.of(context).pop(false);
-                  },
-                  child: Text(noButtonText,
-                      style: const TextStyle(color: Colors.black)),
-                ),
+                if (noButtonText.isNotEmpty)
+                  TextButton(
+                    onPressed: () {
+                      onNoPressed(completer);
+                      Navigator.of(context).pop(false);
+                    },
+                    child: Text(noButtonText,
+                        style: const TextStyle(color: Colors.black)),
+                  ),
                 TextButton(
                   onPressed: () {
                     onYesPressed(completer);
@@ -104,8 +104,7 @@ Future<bool> redirectModal(
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: titlecolor, size: 24),
+                      Icon(Icons.info_outline, color: titlecolor, size: 24),
                       const SizedBox(width: 8),
                       Text(
                         title,
@@ -134,38 +133,38 @@ Future<bool> redirectModal(
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               actions: <Widget>[
-                Padding(
-                  padding: EdgeInsets.zero,
-                  child: FilledButton(
-                    onPressed: () {
-                      onNoPressed(completer);
-                      Navigator.of(context).pop(true);
-                    },
-                    style: ButtonStyle(
-                      shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                          const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(6)))),
-                      backgroundColor: WidgetStateProperty.all<Color>(
-                        secondaryButtonColor,
+                if (noButtonText.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.zero,
+                    child: FilledButton(
+                      onPressed: () {
+                        onNoPressed(completer);
+                        Navigator.of(context).pop(false);
+                      },
+                      style: ButtonStyle(
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(6)))),
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          secondaryButtonColor,
+                        ),
+                        elevation: WidgetStateProperty.all<double>(2),
+                        shadowColor: WidgetStateProperty.all<Color>(
+                            Colors.black.withOpacity(0.04)),
                       ),
-                      elevation:
-                          WidgetStateProperty.all<double>(2),
-                      shadowColor: WidgetStateProperty.all<Color>(
-                          Colors.black.withOpacity(0.04)),
-                    ),
-                    child: Text(
-                      noButtonText,
-                      style: TextStyle(fontFamily: font, color: Colors.black),
+                      child: Text(
+                        noButtonText,
+                        style: TextStyle(fontFamily: font, color: Colors.black),
+                      ),
                     ),
                   ),
-                ),
                 Padding(
                   padding: EdgeInsets.zero,
                   child: ElevatedButton(
                     onPressed: () {
                       onYesPressed(completer);
-                      Navigator.of(context).pop(false);
+                      Navigator.of(context).pop(true);
                     },
                     style: ButtonStyle(
                       shape: WidgetStateProperty.all<RoundedRectangleBorder>(
@@ -175,8 +174,7 @@ Future<bool> redirectModal(
                       backgroundColor: WidgetStateProperty.all<Color>(
                         primaryButtonColor,
                       ),
-                      elevation:
-                          WidgetStateProperty.all<double>(2),
+                      elevation: WidgetStateProperty.all<double>(2),
                       shadowColor: WidgetStateProperty.all<Color>(
                           Colors.black.withOpacity(0.04)),
                     ),
