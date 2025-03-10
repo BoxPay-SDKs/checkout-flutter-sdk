@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:boxpay_checkout_flutter_sdk/dialogs/redirect_modal.dart';
 import 'package:boxpay_checkout_flutter_sdk/loader_sheet.dart';
 import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
@@ -276,7 +278,7 @@ class _WebViewPageState extends State<WebViewPage> {
     if (widget.env == "") {
       domain = "in";
     }
-    job = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
+    job = Timer.periodic(const Duration(seconds: 3), (Timer timer) async {
       fetchStatusAndReason(
           "https://${widget.env}apis.boxpay.$domain/v0/checkout/sessions/${widget.token}/status");
     });
@@ -350,26 +352,35 @@ class _WebViewPageState extends State<WebViewPage> {
     });
   }
 
+  String generateRandomAlphanumericString(int length) {
+    const String charPool =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final Random random = Random();
+    return List.generate(
+        length, (index) => charPool[random.nextInt(charPool.length)]).join();
+  }
+
   void fetchStatusAndReason(String url) async {
     try {
-      var response = await http.get(Uri.parse(url));
+      var response = await http.get(Uri.parse(url), headers: {
+        'X-Trace-Id': generateRandomAlphanumericString(10),
+      });
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
         statusFetched = status;
-        if (status?.toUpperCase().contains("APPROVED") ||
-            statusReason
-                ?.toUpperCase()
-                ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
-            statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
-            status?.toUpperCase()?.contains("PAID")) {
+        if (status?.toUpperCase() == "APPROVED" ||
+            statusReason?.toUpperCase() ==
+                "RECEIVED BY BOXPAY FOR PROCESSING" ||
+            statusReason?.toUpperCase() == "APPROVED BY PSP" ||
+            status?.toUpperCase() == "PAID") {
           tokenFetched = jsonResponse["transactionId"];
           widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
-        } else if (status?.toUpperCase().contains("PENDING")) {
-        } else if (status?.toUpperCase().contains("EXPIRED")) {
+        } else if (status?.toUpperCase() == "PENDING") {
+        } else if (status?.toUpperCase() == "EXPIRED") {
           job?.cancel();
           stopFunctionCalls();
           redirectModal(
@@ -389,11 +400,14 @@ class _WebViewPageState extends State<WebViewPage> {
             },
           );
           tokenFetched = jsonResponse["transactionId"];
-        } else if (status?.toUpperCase().contains("FAILED")) {
+        } else if (status?.toUpperCase() == "FAILED") {
           tokenFetched = jsonResponse["transactionId"];
         }
-      } else {}
+      } else {
+        // print("inside else");
+      }
     } catch (e) {
+      // print(e);
       // no op
     }
   }
