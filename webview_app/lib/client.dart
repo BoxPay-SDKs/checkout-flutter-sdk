@@ -10,7 +10,7 @@ class Client {
   BuildContext context;
   final bool qrLoadVisible;
 
-  Client(this.context,this.qrLoadVisible);
+  Client(this.context, this.qrLoadVisible);
 
   Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
@@ -117,7 +117,6 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendReturnUrl": "https://www.boxpay.tech",
       "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/",
       "createShopperToken": "false"
     };
