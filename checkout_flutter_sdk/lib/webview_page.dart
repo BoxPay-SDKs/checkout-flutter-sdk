@@ -1,8 +1,10 @@
-import 'package:checkout_flutter_sdk/dialogs/redirect_modal.dart';
-import 'package:checkout_flutter_sdk/loader_sheet.dart';
-import 'package:checkout_flutter_sdk/payment_result_object.dart';
+import 'dart:math';
+
+import 'package:boxpay_checkout_flutter_sdk/dialogs/redirect_modal.dart';
+import 'package:boxpay_checkout_flutter_sdk/loader_sheet.dart';
+import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
-import 'package:checkout_flutter_sdk/custom_appbar.dart';
+import 'package:boxpay_checkout_flutter_sdk/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -265,10 +267,6 @@ class _WebViewPageState extends State<WebViewPage> {
                 setTimeout(function() {
                     window.upiTimerModal.postMessage('true');
                   }, 500);
-              }else{
-                setTimeout(function() {
-                    window.upiTimerModal.postMessage('false');
-                  }, 500);
               }
         ''');
       }
@@ -280,7 +278,7 @@ class _WebViewPageState extends State<WebViewPage> {
     if (widget.env == "") {
       domain = "in";
     }
-    job = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
+    job = Timer.periodic(const Duration(seconds: 3), (Timer timer) async {
       fetchStatusAndReason(
           "https://${widget.env}apis.boxpay.$domain/v0/checkout/sessions/${widget.token}/status");
     });
@@ -354,72 +352,63 @@ class _WebViewPageState extends State<WebViewPage> {
     });
   }
 
+  String generateRandomAlphanumericString(int length) {
+    const String charPool =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final Random random = Random();
+    return List.generate(
+        length, (index) => charPool[random.nextInt(charPool.length)]).join();
+  }
+
   void fetchStatusAndReason(String url) async {
     try {
-      var response = await http.get(Uri.parse(url));
+      var response = await http.get(Uri.parse(url), headers: {
+        'X-Trace-Id': generateRandomAlphanumericString(10),
+      });
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         var status = jsonResponse["status"];
         var statusReason = jsonResponse["statusReason"];
         statusFetched = status;
-        if (status?.toUpperCase().contains("APPROVED") ||
-            statusReason
-                ?.toUpperCase()
-                ?.contains("RECEIVED BY BOXPAY FOR PROCESSING") ||
-            statusReason?.toUpperCase()?.contains("APPROVED BY PSP") ||
-            status?.toUpperCase()?.contains("PAID")) {
+        if (status?.toUpperCase() == "APPROVED" ||
+            statusReason?.toUpperCase() ==
+                "RECEIVED BY BOXPAY FOR PROCESSING" ||
+            statusReason?.toUpperCase() == "APPROVED BY PSP" ||
+            status?.toUpperCase() == "PAID") {
           tokenFetched = jsonResponse["transactionId"];
-          widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
+          // widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
-        } else if (status?.toUpperCase().contains("PENDING")) {
-        } else if (status?.toUpperCase().contains("EXPIRED")) {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return Stack(
-                  children: <Widget>[
-                    Container(
-                      color: Colors.white,
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height,
-                    ),
-                    const Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: CustomAppBar(title: 'Checkout'),
-                    ),
-                    AlertDialog(
-                      title: const Text("Payment Session Expired"),
-                      content: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text("Please Click on EXIT to restart"),
-                        ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text("Exit"),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              });
-        } else if (status?.toUpperCase().contains("PROCESSING")) {
+        } else if (status?.toUpperCase() == "PENDING") {
+        } else if (status?.toUpperCase() == "EXPIRED") {
+          job?.cancel();
+          stopFunctionCalls();
+          redirectModal(
+            context,
+            title: "Payment Session Expired",
+            content: "Please exit checkout",
+            yesButtonText: "Exit",
+            noButtonText: "",
+            onYesPressed: (Completer<bool> completer) async {
+              Navigator.of(context).pop();
+              completer.complete(false);
+              widget.onPaymentResult(
+                  PaymentResultObject("Expired", tokenFetched));
+            },
+            onNoPressed: (Completer<bool> completer) {
+              // no op
+            },
+          );
           tokenFetched = jsonResponse["transactionId"];
-        } else if (status?.toUpperCase().contains("FAILED")) {
+        } else if (status?.toUpperCase() == "FAILED") {
           tokenFetched = jsonResponse["transactionId"];
         }
-      } else {}
+      } else {
+        // print("inside else");
+      }
     } catch (e) {
-      print("Error occurred: $e");
+      // print(e);
+      // no op
     }
   }
 }

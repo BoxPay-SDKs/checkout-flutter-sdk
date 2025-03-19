@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:checkout_flutter_sdk/boxpay_checkout.dart';
-import 'package:checkout_flutter_sdk/payment_result_object.dart';
+import 'package:boxpay_checkout_flutter_sdk/boxpay_checkout.dart';
+import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
 import 'dart:convert';
 import 'package:webview_app/thank_you_page.dart';
-import 'package:checkout_flutter_sdk/configuration_options.dart';
+import 'package:boxpay_checkout_flutter_sdk/configuration_options.dart';
 
 class Client {
   BuildContext context;
   final bool qrLoadVisible;
 
-  Client(this.context,this.qrLoadVisible);
+  Client(this.context, this.qrLoadVisible);
 
   Future<void> makePaymentRequest(enteredToken, envSelected) async {
     final url = Uri.parse(
@@ -117,7 +117,6 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendReturnUrl": "https://www.boxpay.tech",
       "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/",
       "createShopperToken": "false"
     };
