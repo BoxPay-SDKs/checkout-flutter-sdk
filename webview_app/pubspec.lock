@@ -47,7 +47,7 @@ packages:
       path: "../checkout_flutter_sdk"
       relative: true
     source: path
-    version: "1.0.6-beta1"
+    version: "1.0.7"
   characters:
     dependency: transitive
     description:
