@@ -376,7 +376,7 @@ class _WebViewPageState extends State<WebViewPage> {
             statusReason?.toUpperCase() == "APPROVED BY PSP" ||
             status?.toUpperCase() == "PAID") {
           tokenFetched = jsonResponse["transactionId"];
-          // widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
+          widget.onPaymentResult(PaymentResultObject("Success", tokenFetched));
           job?.cancel();
           stopFunctionCalls();
         } else if (status?.toUpperCase() == "PENDING") {
