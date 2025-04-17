@@ -152,6 +152,7 @@ class _WebViewPageState extends State<WebViewPage> {
       baseUrl =
           'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
+    print("=====base url ${baseUrl}");
   }
 
   @override
