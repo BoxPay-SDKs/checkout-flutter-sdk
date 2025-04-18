@@ -45,7 +45,7 @@ class BoxPayCheckout {
 
       if (Theme.of(context).platform == TargetPlatform.iOS) {
         // Check iOS URL schemes
-        isGpayInstalled = await isAppInstalled('gpay');
+        isGpayInstalled = await isAppInstalled('gpay') || await isAppInstalled('tez');
         isPaytmInstalled = await isAppInstalled('paytmmp');
         isPhonepeInstalled = await isAppInstalled('phonepe');
       } else {
