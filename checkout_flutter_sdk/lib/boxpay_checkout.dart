@@ -39,10 +39,21 @@ class BoxPayCheckout {
 
       List<String> foundApps = [];
 
-      final isGpayInstalled =
-          await isAppInstalled('com.google.android.apps.nbu.paisa.user');
-      final isPaytmInstalled = await isAppInstalled('net.one97.paytm');
-      final isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
+      bool isGpayInstalled = false;
+      bool isPaytmInstalled = false;
+      bool isPhonepeInstalled = false;
+
+      if (Theme.of(context).platform == TargetPlatform.iOS) {
+        // Check iOS URL schemes
+        isGpayInstalled = await isAppInstalled('gpay');
+        isPaytmInstalled = await isAppInstalled('paytmmp');
+        isPhonepeInstalled = await isAppInstalled('phonepe');
+      } else {
+        // Check Android package names
+        isGpayInstalled = await isAppInstalled('com.google.android.apps.nbu.paisa.user');
+        isPaytmInstalled = await isAppInstalled('net.one97.paytm');
+        isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
+      }
 
       if (isGpayInstalled) {
         foundApps.add("gp=1");
@@ -101,9 +112,15 @@ class BoxPayCheckout {
   }
 
   Future<bool> isAppInstalled(String packageName) async {
-    final appCheck = AppCheck();
-    final bool isInstalled = await appCheck.isAppInstalled(packageName);
-    return isInstalled;
+     final appCheck = AppCheck();
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      // For iOS, we check if we can open the URL scheme
+       final appInfo = await appCheck.checkAvailability("$packageName://") != null;
+     return appInfo;
+    } else {
+      // For Android, we use AppChec
+      return await appCheck.isAppInstalled(packageName);
+    }
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
