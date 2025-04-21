@@ -138,11 +138,10 @@ class Client {
           onPaymentResult: onPaymentResult,
           shopperToken: shopperToken,
           configurationOptions: {
-            ConfigurationOptions.enableSandboxEnv: envSelected == "sandbox",
+            ConfigurationOptions.enableSandboxEnv: envSelected == "test",
             ConfigurationOptions.showUpiQrOnLoad: qrLoadVisible,
           },
         );
-        boxPayCheckout.test = envSelected == "test";
         await boxPayCheckout.display();
       } else {
         print('Error occurred: ${response.statusCode}');

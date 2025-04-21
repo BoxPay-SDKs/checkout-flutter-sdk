@@ -15,7 +15,6 @@ class BoxPayCheckout {
   final Function(PaymentResultObject) onPaymentResult;
   final Map<ConfigurationOptions, dynamic>? configurationOptions;
   late String env;
-  bool test = false;
 
   BoxPayCheckout({
     required this.context,
@@ -26,7 +25,7 @@ class BoxPayCheckout {
   }) {
     // Determine the environment based on configuration options
     env = _getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
-        ? "sandbox-"
+        ? "test-"
         : "";
   }
 
@@ -37,18 +36,14 @@ class BoxPayCheckout {
   bool isPaytmInstalled = false;
   bool isPhonepeInstalled = false;
 
-  try {
-    if (Theme.of(context).platform == TargetPlatform.iOS) {
+  if (Theme.of(context).platform == TargetPlatform.iOS) {
       isGpayInstalled = await _safeCheckAppInstalled(['tez', 'gpay']);
       isPaytmInstalled = await _safeCheckAppInstalled(['paytmmp']);
       isPhonepeInstalled = await _safeCheckAppInstalled(['phonepe']);
-    } else {
+  } else {
       isGpayInstalled = await _safeCheckAppInstalled(['com.google.android.apps.nbu.paisa.user']);
       isPaytmInstalled = await _safeCheckAppInstalled(['net.one97.paytm']);
       isPhonepeInstalled = await _safeCheckAppInstalled(['com.phonepe.app']);
-    }
-  } catch (e) {
-    debugPrint("Error while checking UPI apps: $e");
   }
 
   if (isGpayInstalled) foundApps.add("gp=1");
@@ -138,14 +133,10 @@ void _showErrorDialog() {
   }
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    env = test
-        ? "test-"
-        : (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
-            ? "sandbox-"
+    env = (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
+            ? "test-"
             : "");
-    String domain = test
-        ? "tech"
-        : (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
+    String domain = (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
             ? "tech"
             : "in");
     final apiUrl =
