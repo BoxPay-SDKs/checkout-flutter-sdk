@@ -30,86 +30,100 @@ class BoxPayCheckout {
         : "";
   }
 
-  Future<void> display() async {
+  Future<String> _getAvailableUpiApps() async {
+  List<String> foundApps = [];
+
+  bool isGpayInstalled = false;
+  bool isPaytmInstalled = false;
+  bool isPhonepeInstalled = false;
+
+  try {
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      isGpayInstalled = await _safeCheckAppInstalled(['tez', 'gpay']);
+      isPaytmInstalled = await _safeCheckAppInstalled(['paytmmp']);
+      isPhonepeInstalled = await _safeCheckAppInstalled(['phonepe']);
+    } else {
+      isGpayInstalled = await _safeCheckAppInstalled(['com.google.android.apps.nbu.paisa.user']);
+      isPaytmInstalled = await _safeCheckAppInstalled(['net.one97.paytm']);
+      isPhonepeInstalled = await _safeCheckAppInstalled(['com.phonepe.app']);
+    }
+  } catch (e) {
+    debugPrint("Error while checking UPI apps: $e");
+  }
+
+  if (isGpayInstalled) foundApps.add("gp=1");
+  if (isPaytmInstalled) foundApps.add("pm=1");
+  if (isPhonepeInstalled) foundApps.add("pp=1");
+
+  if (_getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false)) {
+    foundApps.add("uq=1");
+  }
+
+  return foundApps.join('&');
+}
+
+Future<bool> _safeCheckAppInstalled(List<String> schemes) async {
+  for (String scheme in schemes) {
     try {
-      final responseData = await fetchSessionDataFromApi(token);
-      final referrer = extractReferer(responseData);
-      final merchantDetails = extractMerchantDetails(responseData);
-      final backurl = extractBackURL(responseData);
-
-      List<String> foundApps = [];
-
-      bool isGpayInstalled = false;
-      bool isPaytmInstalled = false;
-      bool isPhonepeInstalled = false;
-
-      if (Theme.of(context).platform == TargetPlatform.iOS) {
-        // Check iOS URL schemes
-        isGpayInstalled = await isAppInstalled('gpay') || await isAppInstalled('tez');
-        isPaytmInstalled = await isAppInstalled('paytmmp');
-        isPhonepeInstalled = await isAppInstalled('phonepe');
-      } else {
-        // Check Android package names
-        isGpayInstalled = await isAppInstalled('com.google.android.apps.nbu.paisa.user');
-        isPaytmInstalled = await isAppInstalled('net.one97.paytm');
-        isPhonepeInstalled = await isAppInstalled('com.phonepe.app');
-      }
-
-      if (isGpayInstalled) {
-        foundApps.add("gp=1");
-      }
-      if (isPaytmInstalled) {
-        foundApps.add("pm=1");
-      }
-      if (isPhonepeInstalled) {
-        foundApps.add("pp=1");
-      }
-
-      // Check for `showUpiQrOnLoad` configuration
-      if (_getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false)) {
-        foundApps.add("uq=1");
-      }
-
-      String upiApps = "";
-      if (foundApps.isNotEmpty) {
-        upiApps = foundApps.join('&');
-      }
-
-      await storeMerchantDetailsAndReturnUrlInSharedPreferences(
-          merchantDetails, backurl);
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) => WebViewPage(
-            token: token,
-            onPaymentResult: onPaymentResult,
-            env: env,
-            upiApps: upiApps,
-            referrer: referrer,
-            shopperToken: shopperToken,
-          ),
-        ),
-      );
+      if (await isAppInstalled(scheme)) return true;
     } catch (e) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Invalid token or environment selected'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      debugPrint("Error checking $scheme: $e");
     }
   }
+  return false;
+}
+
+void _navigateToWebView(String upiApps, String referrer) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (BuildContext context) => WebViewPage(
+        token: token,
+        onPaymentResult: onPaymentResult,
+        env: env,
+        upiApps: upiApps,
+        referrer: referrer,
+        shopperToken: shopperToken,
+      ),
+    ),
+  );
+}
+
+
+
+  Future<void> display() async {
+  try {
+    final responseData = await fetchSessionDataFromApi(token);
+    final referrer = extractReferer(responseData);
+    final merchantDetails = extractMerchantDetails(responseData);
+    final backurl = extractBackURL(responseData);
+
+    final upiApps = await _getAvailableUpiApps();
+    await storeMerchantDetailsAndReturnUrlInSharedPreferences(merchantDetails, backurl);
+
+    _navigateToWebView(upiApps, referrer);
+  } catch (e) {
+    debugPrint("Critical error: $e");
+    _showErrorDialog();
+  }
+}
+
+void _showErrorDialog() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Error'),
+        content: const Text('Invalid token or environment selected'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Future<bool> isAppInstalled(String packageName) async {
      final appCheck = AppCheck();
