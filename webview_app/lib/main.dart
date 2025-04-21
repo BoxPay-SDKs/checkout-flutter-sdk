@@ -92,16 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const Text('Prod'),
                 Radio<String>(
-                  value: 'sandbox',
-                  groupValue: _selectedEnv,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedEnv = value!;
-                    });
-                  },
-                ),
-                const Text('Sandbox'),
-                Radio<String>(
                   value: 'test',
                   groupValue: _selectedEnv,
                   onChanged: (value) {
@@ -136,12 +126,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   shopperToken: _shopperTokenController.text,
                   configurationOptions: {
                     ConfigurationOptions.enableSandboxEnv:
-                        _selectedEnv == "sandbox",
+                        _selectedEnv == "test",
                     ConfigurationOptions.showUpiQrOnLoad: _qrLoadVisible,
                   },
                 );
 
-                boxPayCheckout.test = _selectedEnv == "test";
                 boxPayCheckout.display();
               },
               child: const Text('Open Checkout by entering token'),
