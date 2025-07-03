@@ -117,7 +117,7 @@ class Client {
         ]
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
-      "frontendBackUrl": "https://www.tajhotels.com/en-in/epicureprogram/",
+      "frontendBackUrl": "https://www.boxp.tech",
       "createShopperToken": "false"
     };
     try {

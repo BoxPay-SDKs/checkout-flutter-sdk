@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:boxpay_checkout_flutter_sdk/webview_page.dart';
 import 'package:appcheck/appcheck.dart';
 import 'configuration_options.dart';
+import 'package:cross_platform_sdk_flutter_plugin/UPIAppDetector.dart';
 
 class BoxPayCheckout {
   final BuildContext context;
@@ -28,45 +29,6 @@ class BoxPayCheckout {
         ? "test-"
         : "";
   }
-
-  Future<String> _getAvailableUpiApps() async {
-  List<String> foundApps = [];
-
-  bool isGpayInstalled = false;
-  bool isPaytmInstalled = false;
-  bool isPhonepeInstalled = false;
-
-  if (Theme.of(context).platform == TargetPlatform.iOS) {
-      isGpayInstalled = await _safeCheckAppInstalled(['tez', 'gpay']);
-      isPaytmInstalled = await _safeCheckAppInstalled(['paytmmp']);
-      isPhonepeInstalled = await _safeCheckAppInstalled(['phonepe']);
-  } else {
-      isGpayInstalled = await _safeCheckAppInstalled(['com.google.android.apps.nbu.paisa.user']);
-      isPaytmInstalled = await _safeCheckAppInstalled(['net.one97.paytm']);
-      isPhonepeInstalled = await _safeCheckAppInstalled(['com.phonepe.app']);
-  }
-
-  if (isGpayInstalled) foundApps.add("gp=1");
-  if (isPaytmInstalled) foundApps.add("pm=1");
-  if (isPhonepeInstalled) foundApps.add("pp=1");
-
-  if (_getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false)) {
-    foundApps.add("uq=1");
-  }
-
-  return foundApps.join('&');
-}
-
-Future<bool> _safeCheckAppInstalled(List<String> schemes) async {
-  for (String scheme in schemes) {
-    try {
-      if (await isAppInstalled(scheme)) return true;
-    } catch (e) {
-      debugPrint("Error checking $scheme: $e");
-    }
-  }
-  return false;
-}
 
 void _navigateToWebView(String upiApps, String referrer) {
   Navigator.of(context).push(
@@ -92,10 +54,22 @@ void _navigateToWebView(String upiApps, String referrer) {
     final merchantDetails = extractMerchantDetails(responseData);
     final backurl = extractBackURL(responseData);
 
-    final upiApps = await _getAvailableUpiApps();
-    await storeMerchantDetailsAndReturnUrlInSharedPreferences(merchantDetails, backurl);
+    final upiApps = await UPIAppDetector.getInstalledUpiApps(); // e.g., ["phonepe", "paytm"]
+    List<String> foundApps = [];
 
-    _navigateToWebView(upiApps, referrer);
+    if (upiApps.contains("gpay")) {
+      foundApps.add("gp=1");
+    }
+    if (upiApps.contains("paytm")) {
+      foundApps.add("pm=1");
+    }
+    if (upiApps.contains("phonepe")) {
+      foundApps.add("pp=1");
+}
+    await storeMerchantDetailsAndReturnUrlInSharedPreferences(merchantDetails, backurl);
+    String upiAppsString = foundApps.join('&');
+
+    _navigateToWebView(upiAppsString, referrer);
   } catch (e) {
     debugPrint("Critical error: $e");
     _showErrorDialog();

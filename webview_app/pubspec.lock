@@ -47,7 +47,7 @@ packages:
       path: "../checkout_flutter_sdk"
       relative: true
     source: path
-    version: "1.0.14"
+    version: "1.0.15"
   characters:
     dependency: transitive
     description:
@@ -88,6 +88,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  cross_platform_sdk_flutter_plugin:
+    dependency: transitive
+    description:
+      path: "../cross_platform_sdk_flutter_plugin"
+      relative: true
+    source: path
+    version: "0.0.1"
   crypto:
     dependency: transitive
     description:

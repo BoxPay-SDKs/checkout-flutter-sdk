@@ -18,6 +18,8 @@ dependencies:
   appcheck: ^1.5.2
   url_launcher: ^6.0.9
   cupertino_icons: ^1.0.6
+  cross_platform_sdk_flutter_plugin:
+    path: ../cross_platform_sdk_flutter_plugin
 
 dev_dependencies:
   flutter_test:
