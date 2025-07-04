@@ -1,0 +1,24 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.crossplatform.flutter_plugin">
+
+  <queries>
+        <!-- Google Pay specific queries -->
+        <package android:name="com.google.android.apps.nbu.paisa.user" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="gpay" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="paytmmp" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="phonepe" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" />
+        </intent>
+    </queries>
+</manifest>
