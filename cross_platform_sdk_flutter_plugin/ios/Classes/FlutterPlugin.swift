@@ -1,23 +1,24 @@
 import Flutter
 import UIKit
-import CrossPlatformSDK // ✅ This should match your XCFramework module name
+import CrossPlatformSDK
 
-public class FlutterPlugin: NSObject, FlutterPlugin {
-    public static func register(with registrar: FlutterPluginRegistrar) {
+public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
+    @objc public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "cross_platform_sdk", binaryMessenger: registrar.messenger())
-        let instance = FlutterPlugin()
+        let instance = CrossPlatformSdkFlutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
 
-    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    @objc public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getInstalledUpiApps":
-            let detector = UPIAppDetectorIOS() // ✅ This should be your KMM/iOS class from BoxPayBridge
+            let detector = UPIAppDetectorIOS()
             let upiService = UPIService(detector: detector)
-            installedApps = upiService.getAvailableApps()
+            let installedApps = upiService.getAvailableApps()
             result(installedApps)
         default:
             result(FlutterMethodNotImplemented)
         }
     }
 }
+

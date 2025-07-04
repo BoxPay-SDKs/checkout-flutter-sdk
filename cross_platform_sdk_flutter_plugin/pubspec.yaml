@@ -28,4 +28,4 @@ flutter:
         package: com.crossplatform.flutter_plugin
         pluginClass: FlutterPlugin
       ios:
-        pluginClass: FlutterPlugin
+        pluginClass: CrossPlatformSdkFlutterPlugin
