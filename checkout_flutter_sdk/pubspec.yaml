@@ -35,6 +35,13 @@ flutter:
   assets:
     - assets/animations/BoxPayLogo.json
     
+  plugin:
+    platforms:
+      android:
+        package: com.crossplatform.flutter_plugin
+        pluginClass: FlutterPlugin
+      ios:
+        pluginClass: FlutterPlugin
   #
   # For details regarding assets in packages, see
   # https://flutter.dev/assets-and-images/#from-packages
