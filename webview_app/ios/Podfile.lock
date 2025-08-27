@@ -1,0 +1,48 @@
+PODS:
+  - appcheck (1.0.3):
+    - Flutter
+  - cross_platform_sdk_flutter_plugin (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - appcheck (from `.symlinks/plugins/appcheck/ios`)
+  - cross_platform_sdk_flutter_plugin (from `.symlinks/plugins/cross_platform_sdk_flutter_plugin/ios`)
+  - Flutter (from `Flutter`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+EXTERNAL SOURCES:
+  appcheck:
+    :path: ".symlinks/plugins/appcheck/ios"
+  cross_platform_sdk_flutter_plugin:
+    :path: ".symlinks/plugins/cross_platform_sdk_flutter_plugin/ios"
+  Flutter:
+    :path: Flutter
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+
+SPEC CHECKSUMS:
+  appcheck: f3c430f928f9c69ccd8b5d4df04766ac0e57c9aa
+  cross_platform_sdk_flutter_plugin: aecacf6544ed38a8cef806d0257d71567644bd8c
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
+
+PODFILE CHECKSUM: faa23bd8c037a0bbd4634fe38cf3a0dd5c53a267
+
+COCOAPODS: 1.16.2

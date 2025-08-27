@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:boxpay_checkout_flutter_sdk/webview_page.dart';
 import 'package:appcheck/appcheck.dart';
 import 'configuration_options.dart';
-import 'package:cross_platform_sdk_flutter_plugin/UPIAppDetector.dart';
+import 'UPIAppDetector.dart';
 
 class BoxPayCheckout {
   final BuildContext context;
