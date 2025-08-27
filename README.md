@@ -1,6 +1,6 @@
 # checkout-flutter-sdk
 
-Welcome to your Boxpay Checkout React Native SDK 👋
+Welcome to your Boxpay Checkout Flutter SDK 👋
 
 ## Installation
 
