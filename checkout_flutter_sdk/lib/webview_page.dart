@@ -22,6 +22,7 @@ class WebViewPage extends StatefulWidget {
   final String shopperToken;
   final Function(PaymentResultObject) onPaymentResult;
   final String env;
+  final bool isQREnabled;
   final String upiApps;
   final String referrer;
 
@@ -32,7 +33,8 @@ class WebViewPage extends StatefulWidget {
       required this.onPaymentResult,
       required this.env,
       required this.upiApps,
-      required this.referrer});
+      required this.referrer,
+      required this.isQREnabled});
 
   @override
   State<WebViewPage> createState() => _WebViewPageState(referrer: referrer);
@@ -151,6 +153,11 @@ class _WebViewPageState extends State<WebViewPage> {
     } else {
       baseUrl =
           'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
+    }
+
+    print("widget.isQREnabled: ${widget.isQREnabled}");
+    if (widget.isQREnabled == true) {
+        baseUrl += '&uq=1';
     }
   }
 
