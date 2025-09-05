@@ -155,7 +155,6 @@ class _WebViewPageState extends State<WebViewPage> {
           'https://${widget.env}checkout.boxpay.${domain}/?token=${widget.token}&hmh=1';
     }
 
-    print("widget.isQREnabled: ${widget.isQREnabled}");
     if (widget.isQREnabled == true) {
         baseUrl += '&uq=1';
     }
