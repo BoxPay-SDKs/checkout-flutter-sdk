@@ -5,9 +5,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:boxpay_checkout_flutter_sdk/webview_page.dart';
-import 'package:appcheck/appcheck.dart';
 import 'configuration_options.dart';
-import 'package:cross_platform_sdk_flutter_plugin/UPIAppDetector.dart';
+import 'UPIAppDetector.dart';
 
 class BoxPayCheckout {
   final BuildContext context;
@@ -16,6 +15,7 @@ class BoxPayCheckout {
   final Function(PaymentResultObject) onPaymentResult;
   final Map<ConfigurationOptions, dynamic>? configurationOptions;
   late String env;
+  late bool isQREnabled;
 
   BoxPayCheckout({
     required this.context,
@@ -28,6 +28,7 @@ class BoxPayCheckout {
     env = _getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
         ? "test-"
         : "";
+    isQREnabled = _getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false);
   }
 
 void _navigateToWebView(String upiApps, String referrer) {
@@ -37,6 +38,7 @@ void _navigateToWebView(String upiApps, String referrer) {
         token: token,
         onPaymentResult: onPaymentResult,
         env: env,
+        isQREnabled: isQREnabled,
         upiApps: upiApps,
         referrer: referrer,
         shopperToken: shopperToken,
@@ -53,7 +55,6 @@ void _navigateToWebView(String upiApps, String referrer) {
     final referrer = extractReferer(responseData);
     final merchantDetails = extractMerchantDetails(responseData);
     final backurl = extractBackURL(responseData);
-
     final upiApps = await UPIAppDetector.getInstalledUpiApps(); // e.g., ["phonepe", "paytm"]
     List<String> foundApps = [];
 
@@ -93,18 +94,6 @@ void _showErrorDialog() {
     },
   );
 }
-
-  Future<bool> isAppInstalled(String packageName) async {
-     final appCheck = AppCheck();
-    if (Theme.of(context).platform == TargetPlatform.iOS) {
-      // For iOS, we check if we can open the URL scheme
-       final appInfo = await appCheck.checkAvailability("$packageName://") != null;
-     return appInfo;
-    } else {
-      // For Android, we use AppChec
-      return await appCheck.isAppInstalled(packageName);
-    }
-  }
 
   Future<String> fetchSessionDataFromApi(String token) async {
     env = (_getConfigurationValue(ConfigurationOptions.enableSandboxEnv, false)
