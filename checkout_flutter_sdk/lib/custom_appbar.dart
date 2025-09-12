@@ -27,6 +27,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           final merchantName = merchantDetails['merchantName'];
           final headerColor = merchantDetails['checkoutTheme']['headerColor'];
           final logoUrl = merchantDetails['logoUrl'];
+          final isMerchantLogoVisible = merchantDetails['merchantLogoVisible'];
           final font = merchantDetails['checkoutTheme']['font'] ?? "Poppins";
           final headerTextColor =
               merchantDetails['checkoutTheme']['headerTextColor'];
@@ -36,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
           List<Widget> actions = [];
 
-          if (logoUrl != null && logoUrl.isNotEmpty) {
+          if (isMerchantLogoVisible && logoUrl != null && logoUrl.isNotEmpty) {
             actions.add(
               Padding(
                 padding: const EdgeInsets.all(0),
