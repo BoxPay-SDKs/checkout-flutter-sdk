@@ -117,9 +117,22 @@ void _showErrorDialog() {
   }
 
   Map<String, dynamic> extractMerchantDetails(String responseData) {
-    final Map<String, dynamic> parsedData = jsonDecode(responseData);
-    return parsedData['merchantDetails'];
+  final Map<String, dynamic> parsedData = jsonDecode(responseData);
+  final Map<String, dynamic> merchantDetails = parsedData['merchantDetails'];
+  bool merchantLogoVisible = false;
+
+  if (parsedData['configs'] != null &&
+      parsedData['configs']['enabledFields'] != null &&
+      parsedData['configs']['enabledFields'] is List) {
+    final List<dynamic> enabledFields = parsedData['configs']['enabledFields'];
+    merchantLogoVisible = enabledFields.any(
+      (field) => field['field'] == 'MERCHANT_LOGO',
+    );
   }
+  merchantDetails['merchantLogoVisible'] = merchantLogoVisible;
+
+  return merchantDetails;
+}
 
   String extractBackURL(String responseData) {
     final Map<String, dynamic> parsedData = jsonDecode(responseData);
