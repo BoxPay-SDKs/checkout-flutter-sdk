@@ -118,7 +118,7 @@ class Client {
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
       "frontendBackUrl": "https://www.boxp.tech",
-      "createShopperToken": "true"
+      "createShopperToken": "false"
     };
     try {
       final response =

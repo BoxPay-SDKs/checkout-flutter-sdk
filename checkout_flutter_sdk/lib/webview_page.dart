@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:core';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'UPIAppDetector.dart';
 
 Timer? job;
 Timer? modalCheckTimer;
@@ -112,7 +113,10 @@ class _WebViewPageState extends State<WebViewPage> {
           } else if (currentUrl.contains("pay?") && currentUrl.contains("pa")) {
             launchUPIIntentURL(currentUrl);
             return NavigationDecision.prevent;
-          } else if (currentUrl == 'https://www.boxpay.tech/') {
+          } else if (currentUrl.contains("mandate?")) {
+            UPIAppDetector.launchMandate(currentUrl);
+            return NavigationDecision.prevent;
+          }else if (currentUrl == 'https://www.boxpay.tech/') {
             currentUrl = baseUrl;
             await _controller.loadRequest(
               Uri.parse(currentUrl),
