@@ -36,7 +36,6 @@ class _BoxPay3DSPageState extends State<BoxPay3DSPage> {
         NavigationDelegate(
           // 1. INTERCEPT THE URL
           onPageStarted: (String url) {
-            debugPrint('WebView loading: $url');
             
             // Define your termination keywords. 
             // "ResponseHandler" is common for PayU/BoxPay. 
@@ -49,7 +48,6 @@ class _BoxPay3DSPageState extends State<BoxPay3DSPage> {
             }
           },
           onWebResourceError: (error) {
-            debugPrint('WebView error: ${error.description}');
           },
         ),
       );

@@ -39,6 +39,9 @@ class BoxPayCheckout {
         _getConfigurationValue(ConfigurationOptions.showUpiQrOnLoad, false);
   }
 
+  // Helper getter to construct the common base URL
+String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token';
+
   Future<void> display() async {
     try {
       // 1. Fetch Session Data
@@ -66,8 +69,7 @@ class BoxPayCheckout {
           String uniqueRef = extractUniqueRef(responseData);
           recommendedInstrument = await fetchRecommendedInstruments(uniqueRef);
         } catch (e) {
-          // print("Failed to fetch recommended instruments: $e");
-          // Fail silently and proceed to Webview
+          _showErrorDialog();
         }
       }
 
@@ -90,7 +92,6 @@ class BoxPayCheckout {
         _navigateToWebView(upiAppsString, referrer);
       }
     } catch (e) {
-      print("Critical error: $e");
       _showErrorDialog();
     }
   }
@@ -98,10 +99,8 @@ class BoxPayCheckout {
   // --- API CALLS ---
 
   Future<String> fetchSessionDataFromApi(String token) async {
-    final apiUrl =
-        'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token';
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(_baseUrl));
       if (response.statusCode == 200) {
         return response.body;
       } else {
@@ -115,7 +114,7 @@ class BoxPayCheckout {
   /// New API call to fetch saved/recommended instruments
   Future<Map<String, dynamic>?> fetchRecommendedInstruments(String uniqueRef) async {
     final apiUrl =
-        'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token/shoppers/$uniqueRef/recommended-instruments'; 
+        '$_baseUrl/shoppers/$uniqueRef/recommended-instruments'; 
         // Note: verify the actual endpoint for recommended instruments with BoxPay docs
     
     try {
@@ -140,7 +139,6 @@ class BoxPayCheckout {
     );
 
     if (cardInstrument != null) {
-      print("Found Saved Card: $cardInstrument");
       return cardInstrument;
     }
   }
@@ -148,17 +146,15 @@ class BoxPayCheckout {
   return null;
       }
     } catch (e) {
-      print("Error fetching recommended: $e");
+      _showErrorDialog();
     }
     return null;
   }
 
   /// Process payment for the Swipe Action
   Future<void> processSavedInstrumentPayment(String instrumentRef, Map<String, dynamic> shopperDetails) async {
-    // 1. Define the Endpoint (Based on your CURL, it targets the session directly)
-    final apiUrl = 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token';
     
-    // 2. Prepare Headers
+    // 1. Prepare Headers
     // Note: We generate a unique ID for the request and use the Session Token for auth
     final Map<String, String> headers = {
       'X-Request-Id': _generateRandomRequestId(),
@@ -166,7 +162,7 @@ class BoxPayCheckout {
       'Content-Type': 'application/json'
     };
 
-
+    // 2. Prepare body
     final Map<String, dynamic> body = {
       "browserData": {
         "screenHeight": MediaQuery.of(context).size.height.toInt().toString(),
@@ -197,16 +193,12 @@ class BoxPayCheckout {
     };
 
     try {
-      // 4. Make the API Call
+      // 3. Make the API Call
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(_baseUrl),
         headers: headers,
         body: jsonEncode(body),
       );
-
-      debugPrint("Payment Response Status: ${response.statusCode}");
-      debugPrint("Payment Response Body: ${response.body}");
-
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
         
@@ -269,11 +261,8 @@ class BoxPayCheckout {
              // User pressed 'X' or Back
              throw Exception("Payment Cancelled by user");
           }
-        } else {
-          // No Action Required? Assume direct success (Frictionless)
-          debugPrint("No 3DS Action required. Success.");
-          Navigator.of(context).pop("success");
-          onPaymentResult(PaymentResultObject("Success", result));
+        } else {          
+          onPaymentResult(PaymentResultObject(statusObj['status'], result['transactionId']));
         }
       } else {
         // 6. Handle API Errors
@@ -283,8 +272,18 @@ class BoxPayCheckout {
     } catch (e) {
       _showPaymentFailedDialog();
       throw e;
+    }
+  }
 
-      // Optionally show an error dialog here
+  Future<Map<String, dynamic>> fetchTransactionStatus() async {
+    final apiUrl = '$_baseUrl/status';
+        
+    final response = await http.get(Uri.parse(apiUrl));
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to fetch status: ${response.statusCode}");
     }
   }
 
@@ -459,18 +458,4 @@ class BoxPayCheckout {
     (_) => chars.codeUnitAt(rnd.nextInt(chars.length))
   ));
 }
-
-Future<Map<String, dynamic>> fetchTransactionStatus() async {
-    final apiUrl = 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$token/status';
-    
-    debugPrint("Fetching final status from: $apiUrl");
-    
-    final response = await http.get(Uri.parse(apiUrl));
-    
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception("Failed to fetch status: ${response.statusCode}");
-    }
-  }
 }
