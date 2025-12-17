@@ -9,8 +9,9 @@ import 'configuration_options.dart';
 import 'UPIAppDetector.dart';
 import 'swipe_to_pay.dart';
 import 'boxpay_3ds_page.dart';
-import 'dart:math'; // Make sure to import this at the top
-
+import 'dart:math'; 
+import 'package:device_info_plus/device_info_plus.dart'; 
+import 'dart:io';
 
 class BoxPayCheckout {
   final BuildContext context;
@@ -159,8 +160,10 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     final Map<String, String> headers = {
       'X-Request-Id': _generateRandomRequestId(),
       'Authorization': 'Session $shopperToken',
+      'X-Client-Connector-Name' : 'Flutter SDK',
       'Content-Type': 'application/json'
     };
+    final deviceData = await _getDeviceDetails();
 
     // 2. Prepare body
     final Map<String, dynamic> body = {
@@ -183,13 +186,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         }
       },
       "shopper" : shopperDetails,
-      "deviceDetails": {
-        "browser": "Flutter App",
-        "platformVersion": "13", // Use 'device_info_plus' to get real version
-        "deviceType": "Mobile",
-        "deviceName": "Android Device",
-        "deviceBrandName": "Generic"
-      }
+      "deviceDetails": deviceData
     };
 
     try {
@@ -457,5 +454,38 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     length, 
     (_) => chars.codeUnitAt(rnd.nextInt(chars.length))
   ));
+}
+Future<Map<String, String>> _getDeviceDetails() async {
+  final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+  
+  String platformVersion = 'Unknown';
+  String deviceName = 'Unknown';
+  String deviceBrandName = 'Unknown';
+  String deviceType = 'Mobile'; // Default assumption
+
+  try {
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
+      platformVersion = androidInfo.version.release; // e.g., "13"
+      deviceName = androidInfo.model; // e.g., "Pixel 6"
+      deviceBrandName = androidInfo.brand; // e.g., "google"
+      
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfoPlugin.iosInfo;
+      platformVersion = iosInfo.systemVersion; // e.g., "16.4"
+      deviceName = iosInfo.name; // e.g., "iPhone 14"
+      deviceBrandName = "Apple";
+    }
+  } catch (e) {
+    // no any operation performed
+  }
+
+  return {
+    "browser": "In-App", // Since this is a native app, not a browser
+    "platformVersion": platformVersion,
+    "deviceType": deviceType,
+    "deviceName": deviceName,
+    "deviceBrandName": deviceBrandName
+  };
 }
 }

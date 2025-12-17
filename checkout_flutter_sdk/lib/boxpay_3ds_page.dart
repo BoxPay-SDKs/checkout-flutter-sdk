@@ -36,11 +36,7 @@ class _BoxPay3DSPageState extends State<BoxPay3DSPage> {
         NavigationDelegate(
           // 1. INTERCEPT THE URL
           onPageStarted: (String url) {
-            
-            // Define your termination keywords. 
-            // "ResponseHandler" is common for PayU/BoxPay. 
-            // "checkout/sessions" implies it's redirecting back to BoxPay backend.
-            if (url.contains("boxpay")) { // You can match your specific backUrl here
+            if (url.contains("boxpay")) { 
               
               // 2. STOP & CLOSE IMMEDIATELY
               _controller.loadRequest(Uri.parse("about:blank")); // Stop executing scripts
