@@ -23,7 +23,7 @@ class Client {
     final Map<String, dynamic> jsonData = {
       "context": {
         "countryCode": "IN",
-        "legalEntity": {"code": "razorpay"},
+        "legalEntity": {"code": "payu"},
         "orderId": "test12"
       },
       "paymentType": "S",
@@ -41,7 +41,7 @@ class Client {
         "firstName": "test",
         "lastName": "last",
         "email": "test123@gmail.com",
-        "uniqueReference": "x123y",
+        "uniqueReference": "x123",
         "phoneNumber": "911234567890",
         "deliveryAddress": {
           "address1": "first line",
@@ -118,7 +118,7 @@ class Client {
       },
       "statusNotifyUrl": "https://www.boxpay.tech",
       "frontendBackUrl": "https://www.boxp.tech",
-      "createShopperToken": "false"
+      "createShopperToken": "true"
     };
     try {
       final response =
