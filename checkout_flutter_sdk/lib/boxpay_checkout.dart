@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:boxpay_checkout_flutter_sdk/loader_sheet.dart';
 import 'package:boxpay_checkout_flutter_sdk/payment_result_object.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -45,8 +46,20 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
 
   Future<void> display() async {
     try {
+      _openLoader();
       // 1. Fetch Session Data
       final responseData = await fetchSessionDataFromApi(token);
+      final checkoutStatus = extractCheckoutStatus(responseData);
+      if (checkoutStatus.$1 == 'PAID' || checkoutStatus.$1 == 'SUCCESS' || checkoutStatus.$1 == 'APPROVED') {
+        _closeLoader();
+        onPaymentResult(PaymentResultObject('SUCCESS', checkoutStatus.$2 ?? ""));
+        return;
+      }
+      if(checkoutStatus.$1 == 'EXPIRED') {
+        _closeLoader();
+        onPaymentResult(PaymentResultObject('EXPIRED', checkoutStatus.$2 ?? ""));
+        return;
+      }
       final referrer = extractReferer(responseData);
       final merchantDetails = extractMerchantDetails(responseData);
       final backurl = extractBackURL(responseData);
@@ -80,6 +93,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         final merchantSettingsButtonColor = merchantDetails['checkoutTheme']['primaryButtonColor'] ?? Color(0xFF000000);
         final buttonColor = Color(
               int.parse(merchantSettingsButtonColor.substring(1, 7), radix: 16) + 0xFF000000);
+              _closeLoader();
         _showSwipeToPayModal(
           instrument: recommendedInstrument,
           merchantColor: buttonColor,
@@ -90,9 +104,11 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         );
       } else {
         // No saved card? Go straight to WebView
+        _closeLoader();
         _navigateToWebView(upiAppsString, referrer);
       }
     } catch (e) {
+      _closeLoader();
       _showErrorDialog();
     }
   }
@@ -302,6 +318,22 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     );
   }
 
+  void _openLoader() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false, // User cannot click outside
+      enableDrag: false,    // User cannot swipe down
+      backgroundColor: Colors.transparent,
+      builder: (context) => const LoaderSheet(),
+    );
+  }
+
+  void _closeLoader() {
+    if (Navigator.canPop(context)) {
+      Navigator.of(context).pop();
+    }
+  }
+
   void _showSwipeToPayModal({
     required Map<String, dynamic> instrument,
     required Color merchantColor,
@@ -440,6 +472,13 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       return referers[0];
     }
     return '';
+  }
+
+  (String, String?) extractCheckoutStatus(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    final String status = parsedData['status'].toString().toUpperCase();
+    final String? transactionId = parsedData['lastTransactionId'];
+    return (status, transactionId);
   }
 
   T _getConfigurationValue<T>(ConfigurationOptions key, T defaultValue) {
