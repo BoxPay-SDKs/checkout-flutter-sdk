@@ -1,6 +1,6 @@
 name: boxpay_checkout_flutter_sdk
 description: "Boxpay Checkout SDK."
-version: 1.0.18
+version: 1.0.19-beta1
 homepage: https://developers.boxpay.tech/docs/checkout-integration/checkout-sdks/flutter-checkout-sdk/
 repository: https://github.com/BoxPay-SDKs/checkout-flutter-sdk.git
 
@@ -16,6 +16,9 @@ dependencies:
   shared_preferences: ^2.0.0
   lottie: ^3.2.0
   url_launcher: ^6.0.9
+  flutter_svg: ^2.0.0
+  device_info_plus: ^10.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -32,7 +35,20 @@ flutter:
   # To add assets to your package, add an assets section, like this:
   assets:
     - assets/animations/BoxPayLogo.json
-    
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-ExtraBold.ttf
+          weight: 800
   plugin:
     platforms:
       android:
