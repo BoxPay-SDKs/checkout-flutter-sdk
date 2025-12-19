@@ -318,15 +318,24 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     );
   }
 
-  void _openLoader() {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false, // User cannot click outside
-      enableDrag: false,    // User cannot swipe down
-      backgroundColor: Colors.transparent,
-      builder: (context) => const LoaderSheet(),
-    );
-  }
+ void _openLoader() {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // Prevents closing by tapping outside
+    useSafeArea: false,        // Allows the loader to cover the status bar
+    builder: (context) {
+      return PopScope(
+        canPop: false,         // Prevents closing via back button
+        child: Container(
+          color: Colors.black.withOpacity(0.5), // Semi-transparent background
+          child: const Center(
+            child: LoaderSheet(), // Your custom loader widget
+          ),
+        ),
+      );
+    },
+  );
+}
 
   void _closeLoader() {
     if (Navigator.canPop(context)) {
