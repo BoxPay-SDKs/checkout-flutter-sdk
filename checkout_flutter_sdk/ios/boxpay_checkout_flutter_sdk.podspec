@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'boxpay_checkout_flutter_sdk'
-  s.version          = '1.0.19'
+  s.version          = '1.0.20-beta1'
   s.summary          = 'Flutter plugin for cross-platform SDK integration.'
   s.description      = <<-DESC
 A Flutter plugin that bridges platform-specific native SDKs with Dart via MethodChannels.
