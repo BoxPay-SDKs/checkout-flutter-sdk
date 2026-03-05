@@ -3,8 +3,8 @@
 # Run `pod lib lint flutter_plugin.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'cross_platform_sdk_flutter_plugin'
-  s.version          = '0.0.1'
+  s.name             = 'boxpay_checkout_flutter_sdk'
+  s.version          = '1.0.20-beta1'
   s.summary          = 'Flutter plugin for cross-platform SDK integration.'
   s.description      = <<-DESC
 A Flutter plugin that bridges platform-specific native SDKs with Dart via MethodChannels.
@@ -15,6 +15,9 @@ Includes support for UPI detection and native service bridging using an XCFramew
   s.license = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'BoxPay' => 'developers@boxpay.tech' }
   s.source           = { :path => '.' }
+  s.static_framework = true
+
+  s.platform         = :ios, '12.0' 
 
   s.swift_version    = '5.0'
 
@@ -24,7 +27,7 @@ Includes support for UPI detection and native service bridging using an XCFramew
   s.dependency 'Flutter'
 
   s.vendored_frameworks = 'Framework/CrossPlatformSDK.xcframework'
-  s.module_name = 'cross_platform_sdk_flutter_plugin'
+  s.module_name = 'boxpay_checkout_flutter_sdk'
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
