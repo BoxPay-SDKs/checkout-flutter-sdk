@@ -38,9 +38,10 @@ class _BoxPay3DSPageState extends State<BoxPay3DSPage> {
           onPageStarted: (String url) {
             if (url.contains("boxpay")) { 
               
-              // 2. STOP & CLOSE IMMEDIATELY
-              _controller.loadRequest(Uri.parse("about:blank")); // Stop executing scripts
-              Navigator.of(context).pop("completed"); // Return control to main screen
+              
+              Future.delayed(const Duration(milliseconds: 500), () {
+      Navigator.of(context).pop("completed");
+    }); // Return control to main screen
             }
           },
           onWebResourceError: (error) {
