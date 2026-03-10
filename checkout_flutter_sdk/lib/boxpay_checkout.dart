@@ -64,6 +64,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       final merchantDetails = extractMerchantDetails(responseData);
       final backurl = extractBackURL(responseData);
       final shopperDetails = extractShopperDetails(responseData);
+      bool isValidShopperDetails = isShopperValid(shopperDetails);
       
       // 2. Prepare UPI Data
       final upiApps = await UPIAppDetector.getInstalledUpiApps();
@@ -88,7 +89,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       }
 
       // 4. LOGIC: Show Swipe UI OR Go to WebView
-      if (recommendedInstrument != null && recommendedInstrument.isNotEmpty) {
+      if (recommendedInstrument != null && recommendedInstrument.isNotEmpty && isValidShopperDetails) {
         // Show the native Swipe to Pay UI
         final merchantSettingsButtonColor = merchantDetails['checkoutTheme']['primaryButtonColor'] ?? Color(0xFF000000);
         final buttonColor = Color(
@@ -317,6 +318,25 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       ),
     );
   }
+
+  bool isShopperValid(Map<String, dynamic> shopper) {
+  bool isNotEmpty(dynamic value) =>
+      value != null && value.toString().trim().isNotEmpty;
+
+  final address = shopper['deliveryAddress'] as Map<String, dynamic>?;
+
+  return isNotEmpty(shopper['firstName']) &&
+      isNotEmpty(shopper['lastName']) &&
+      isNotEmpty(shopper['phoneNumber']) &&
+      isNotEmpty(shopper['email']) &&
+      isNotEmpty(shopper['uniqueReference']) &&
+      address != null &&
+      isNotEmpty(address['address1']) &&
+      isNotEmpty(address['city']) &&
+      isNotEmpty(address['state']) &&
+      isNotEmpty(address['countryCode']) &&
+      isNotEmpty(address['postalCode']);
+}
 
  void _openLoader() {
   showDialog(
