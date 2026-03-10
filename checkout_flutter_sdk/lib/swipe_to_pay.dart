@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import this
+import 'image_loader.dart';
 import 'dart:async';
 import 'package:lottie/lottie.dart';
 
@@ -135,7 +135,10 @@ class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
               ),
               child: Row(
                 children: [
-                  _buildCardIcon(),
+                  ImageLoader(
+  image: widget.logoUrl ?? "",
+  errorWidget: Icon(Icons.credit_card, color: _purpleColor, size: 28),
+),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
@@ -162,25 +165,6 @@ class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
     );
   }
 
-  // 4. Updated Icon Logic to use Logo URL
-  Widget _buildCardIcon() {
-    // A. Priority: Use URL if available
-    if (widget.logoUrl != null && widget.logoUrl!.isNotEmpty) {
-      return SizedBox(
-        width: 40, 
-        height: 25,
-        child: SvgPicture.network(
-          widget.logoUrl!,
-          fit: BoxFit.contain,
-          // If SVG fails or is loading, show the fallback
-          placeholderBuilder: (context) => Icon(Icons.credit_card, color: _purpleColor, size: 28),
-        ),
-      );
-    }
-    
-    // B. Fallback: Use manual styles
-    return Icon(Icons.credit_card, color: _purpleColor, size: 28);
-  }
 
   Widget _buildCustomSwipeSlider(double maxWidth, String displayAmount) {
     // Total travel distance = Container Width - Knob Width - (Padding * 2)
