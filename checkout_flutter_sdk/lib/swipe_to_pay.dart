@@ -68,6 +68,7 @@ class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
               child: Center(
                 child: Lottie.asset(
                   'assets/animations/BoxPayLogo.json',
+                  package: packageName,
                   height: 80, 
                   width: 80,
                   fit: BoxFit.contain,
