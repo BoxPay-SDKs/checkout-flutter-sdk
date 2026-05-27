@@ -1,54 +1,28 @@
 PODS:
-  - "appcheck (1.5.4+1)":
-    - Flutter
-  - boxpay_checkout_flutter_sdk (1.0.19):
+  - boxpay_checkout_flutter_sdk (1.0.20-beta1):
     - Flutter
   - device_info_plus (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - shared_preferences_foundation (0.0.1):
-    - Flutter
-    - FlutterMacOS
-  - url_launcher_ios (0.0.1):
-    - Flutter
-  - webview_flutter_wkwebview (0.0.1):
-    - Flutter
-    - FlutterMacOS
 
 DEPENDENCIES:
-  - appcheck (from `.symlinks/plugins/appcheck/ios`)
   - boxpay_checkout_flutter_sdk (from `.symlinks/plugins/boxpay_checkout_flutter_sdk/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
-  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
-  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 EXTERNAL SOURCES:
-  appcheck:
-    :path: ".symlinks/plugins/appcheck/ios"
   boxpay_checkout_flutter_sdk:
     :path: ".symlinks/plugins/boxpay_checkout_flutter_sdk/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
-  shared_preferences_foundation:
-    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
-  url_launcher_ios:
-    :path: ".symlinks/plugins/url_launcher_ios/ios"
-  webview_flutter_wkwebview:
-    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
-  appcheck: 3c94d0ffc94bd639938cac7427d5b13df2795404
-  boxpay_checkout_flutter_sdk: cf73200a2b3f9f71bee6a5951d07011a3daa1339
+  boxpay_checkout_flutter_sdk: e7965ae0ca3a50588ebb00beac37aef3b2976201
   device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
 
-PODFILE CHECKSUM: b39d19c8918cd4587e82c5e478bdc5720793fad3
+PODFILE CHECKSUM: a40c6ceee4b1df44d1b9b9c70c1206db08342005
 
 COCOAPODS: 1.16.2

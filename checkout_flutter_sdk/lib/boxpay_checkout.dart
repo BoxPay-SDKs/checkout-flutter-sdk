@@ -63,8 +63,9 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       final referrer = extractReferer(responseData);
       final merchantDetails = extractMerchantDetails(responseData);
       final backurl = extractBackURL(responseData);
+      final enabledFields = extractEnabledFields(responseData);
       final shopperDetails = extractShopperDetails(responseData);
-      bool isValidShopperDetails = isShopperValid(shopperDetails);
+      bool isValidShopperDetails = isShopperValid(shopperDetails, enabledFields);
       
       // 2. Prepare UPI Data
       final upiApps = await UPIAppDetector.getInstalledUpiApps();
@@ -281,7 +282,6 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       } else {
         // 6. Handle API Errors
         _showPaymentFailedDialog();
-        throw Exception("Payment failed with status: ${response.statusCode}");
       }
     } catch (e) {
       _showPaymentFailedDialog();
@@ -319,23 +319,57 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     );
   }
 
-  bool isShopperValid(Map<String, dynamic> shopper) {
+  bool isShopperValid(Map<String, dynamic> shopper, List<dynamic> enabledFields) {
+  // Helper to check if a value is actually present
   bool isNotEmpty(dynamic value) =>
       value != null && value.toString().trim().isNotEmpty;
 
-  final address = shopper['deliveryAddress'] as Map<String, dynamic>?;
+  // Helper to check if a specific field is in the enabledFields list
+  bool isEnabled(String fieldName) =>
+      enabledFields.any((f) => f['field'] == fieldName);
 
-  return isNotEmpty(shopper['firstName']) &&
-      isNotEmpty(shopper['lastName']) &&
-      isNotEmpty(shopper['phoneNumber']) &&
-      isNotEmpty(shopper['email']) &&
-      isNotEmpty(shopper['uniqueReference']) &&
-      address != null &&
-      isNotEmpty(address['address1']) &&
-      isNotEmpty(address['city']) &&
-      isNotEmpty(address['state']) &&
-      isNotEmpty(address['countryCode']) &&
-      isNotEmpty(address['postalCode']);
+  // 1. Validate SHOPPER_NAME (First & Last name)
+  if (isEnabled('SHOPPER_NAME')) {
+    if (!isNotEmpty(shopper['firstName']) || !isNotEmpty(shopper['lastName'])) {
+      return false;
+    }
+  }
+
+  // 2. Validate SHOPPER_EMAIL
+  if (isEnabled('SHOPPER_EMAIL')) {
+    if (!isNotEmpty(shopper['email'])) {
+      return false;
+    }
+  }
+
+  // 3. Validate SHOPPER_PHONE
+  if (isEnabled('SHOPPER_PHONE')) {
+    if (!isNotEmpty(shopper['phoneNumber'])) {
+      return false;
+    }
+  }
+
+  // 4. Validate SHIPPING_ADDRESS
+  if (isEnabled('SHIPPING_ADDRESS')) {
+    final address = shopper['deliveryAddress'] as Map<String, dynamic>?;
+    
+    if (address == null) return false; // Address block missing entirely
+
+    bool isAddressValid = isNotEmpty(address['address1']) &&
+        isNotEmpty(address['city']) &&
+        isNotEmpty(address['state']) &&
+        isNotEmpty(address['countryCode']) &&
+        isNotEmpty(address['postalCode']);
+
+    if (!isAddressValid) return false;
+  }
+
+  // 5. Check uniqueReference
+  if (!isNotEmpty(shopper['uniqueReference'])) {
+    return false;
+  }
+
+  return true; // All enabled fields are valid
 }
 
  void _openLoader() {
@@ -477,6 +511,13 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     final Map<String, dynamic> shopperDetails = parsedData['paymentDetails']['shopper'];
 
     return shopperDetails;
+  }
+
+  List<dynamic> extractEnabledFields(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    final List<dynamic> enabledFields = parsedData['configs']?['enabledFields'];
+
+    return enabledFields;
   }
 
   String extractBackURL(String responseData) {
