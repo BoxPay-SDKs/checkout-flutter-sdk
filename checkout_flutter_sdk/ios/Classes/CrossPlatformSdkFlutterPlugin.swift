@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import CrossPlatformSDK
+import cross_platform_sdk
 
 public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
     @objc public static func register(with registrar: FlutterPluginRegistrar) {
@@ -12,10 +12,8 @@ public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
     @objc public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getInstalledUpiApps":
-            let detector = UPIAppDetectorIOS()
-            let upiService = UPIService(detector: detector)
-            let installedApps = upiService.getAvailableApps()
-            result(installedApps)
+            let apps = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil)
+-           result(apps)
             
         case "launchMandate":
             guard let args = call.arguments as? [String: Any],

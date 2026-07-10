@@ -1,5 +1,0 @@
-framework module "CrossPlatformSDK" {
-    umbrella header "CrossPlatformSDK.h"
-    export *
-    module * { export * }
-}

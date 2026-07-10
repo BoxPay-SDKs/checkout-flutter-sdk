@@ -23,10 +23,9 @@ Includes support for UPI detection and native service bridging using an XCFramew
 
   s.source_files     = 'Classes/**/*'
 
-  # s.dependency 'CrossPlatformSDK', :path => '../../cross-platform-sdk'
+  s.dependency 'CrossPlatformSDK', '1.0.1'
   s.dependency 'Flutter'
 
-  s.vendored_frameworks = 'Framework/CrossPlatformSDK.xcframework'
   s.module_name = 'boxpay_checkout_flutter_sdk'
 
   s.pod_target_xcconfig = {
