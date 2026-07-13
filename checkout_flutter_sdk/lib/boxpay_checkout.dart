@@ -69,11 +69,23 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
       
       // 2. Prepare UPI Data
       final upiApps = await UPIAppDetector.getInstalledUpiApps();
-      List<String> foundApps = [];
-      if (upiApps.contains("gpay")) foundApps.add("gp=1");
-      if (upiApps.contains("paytm")) foundApps.add("pm=1");
-      if (upiApps.contains("phonepe")) foundApps.add("pp=1");
-      String upiAppsString = foundApps.join('&');
+
+      const upiAppMappings = {
+        'gpay': 'gp=1',
+        'paytm': 'pm=1',
+        'phonepe': 'pp=1',
+        'bhim': 'bm=1',
+        'amazon_pay': 'ap=1',
+        'mobikwik': 'mk=1',
+        'bharatpe': 'bp=1',
+        'jupiter': 'jp=1',
+        'pop': 'pu=1',
+      };
+
+      final upiAppsString = upiAppMappings.entries
+          .where((entry) => upiApps.contains(entry.key))
+          .map((entry) => entry.value)
+          .join('&');
 
       await storeMerchantDetailsAndReturnUrlInSharedPreferences(merchantDetails, backurl);
 

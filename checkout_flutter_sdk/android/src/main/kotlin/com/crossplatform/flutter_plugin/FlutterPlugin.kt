@@ -5,8 +5,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import com.crossplatform.android.UPIAppDetectorAndroid
-import com.crossplatform.sdk.UPIService
+import com.crossplatform.sdk.presentation.getInstalledUpiApps
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -26,8 +25,7 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
       "getInstalledUpiApps" -> {
-          val detector = UPIAppDetectorAndroid(context)
-          val apps = detector.getInstalledUPIApps()
+          val apps = getInstalledUPIApps(context)
           result.success(apps)
       }
 
