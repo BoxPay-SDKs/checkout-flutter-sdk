@@ -25,7 +25,7 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
       "getInstalledUpiApps" -> {
-          val apps = getInstalledUPIApps(context)
+          val apps = getInstalledUpiApps(context)
           result.success(apps)
       }
 
