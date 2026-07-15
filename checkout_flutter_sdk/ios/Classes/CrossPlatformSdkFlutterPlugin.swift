@@ -13,7 +13,7 @@ public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
         switch call.method {
         case "getInstalledUpiApps":
             let apps = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil)
--           result(apps)
+            result(apps)
             
         case "launchMandate":
             guard let args = call.arguments as? [String: Any],
