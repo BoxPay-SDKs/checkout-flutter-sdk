@@ -10,7 +10,7 @@ class UPIAppDetector {
 
   static Future<bool> launchMandate(String mandateUrl) async {
     try {
-      final result = await _channel.invokeMethod<bool>(
+      final result = await _channel.invokeMethod(
         'launchMandate',
         {'url': mandateUrl},
       );
@@ -18,6 +18,20 @@ class UPIAppDetector {
       return result ?? false; // true = launched, false = unsupported
     } on PlatformException catch (e) {
       print('Mandate launch failed: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> launchPayment(String payUrl) async {
+    try {
+      final result = await _channel.invokeMethod(
+        'launchPayment',
+        {'url': payUrl},
+      );
+      print("launchPayment result: $result");
+      return result ?? false; // true = launched, false = unsupported
+    } on PlatformException catch (e) {
+      print('Payment launch failed: $e');
       return false;
     }
   }
