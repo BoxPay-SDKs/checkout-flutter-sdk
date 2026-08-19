@@ -10,9 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.util.Log
 
-private const val TAG = "UpiPluginDebug"
 
 class FlutterPlugin : FlutterPlugin, MethodCallHandler {
   private lateinit var channel: MethodChannel
@@ -26,23 +24,19 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
-    Log.d(TAG, "onMethodCall: ${call.method}, args=${call.arguments}")
     when (call.method) {
       "getInstalledUpiApps" -> {
         val apps: List<Pair<String, String>> = getInstalledUpiApps(context)
-        Log.d(TAG, "getInstalledUpiApps -> $apps")
         result.success(apps.map { it.first }) 
       }
 
       "launchMandate" -> {
           val url = call.argument<String>("url") ?: ""
-          Log.d(TAG, "launchMandate url=$url")
           launchUpiIntent(url, result)
       }
 
       "launchPayment" -> {
           val url = call.argument<String>("url") ?: ""
-          Log.d(TAG, "launchPayment url=$url")
           launchUpiIntent(url, result)
       }
 
@@ -52,23 +46,19 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
 
   private fun launchUpiIntent(upiUrl: String, result: Result) {
     if (upiUrl.isBlank()) {
-      Log.w(TAG, "launchUpiIntent: URL was blank")
       result.error("INVALID_URL", "UPI URL was empty", null)
       return
     }
 
     try {
       val uri = Uri.parse(upiUrl)
-      Log.d(TAG, "launchUpiIntent: parsed uri=$uri scheme=${uri.scheme} host=${uri.host}")
       val pm = context.packageManager
 
       // Source of truth: whatever getInstalledUpiApps() already treats as
       // a legitimate, installed UPI app.
       val installedTrustedPackages: List<Pair<String, String>> = getInstalledUpiApps(context)
-      Log.d(TAG, "installedTrustedPackages=$installedTrustedPackages")
 
       if (installedTrustedPackages.isEmpty()) {
-      Log.w(TAG, "No trusted UPI apps installed at all -> returning false")
       result.success(false)
       return
       }
@@ -81,42 +71,34 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
         .map { it.activityInfo.packageName }
         .toSet()
 
-      Log.d(TAG, "resolvableCandidates for scheme '${uri.scheme}' = $resolvableCandidates")
 
       // Filter pairs by package name being resolvable, keep the pair (need alias later? then don't map yet)
       val trustedTargets: List<String> = installedTrustedPackages
         .filter { (_, packageName) -> packageName in resolvableCandidates }
         .map { (_, packageName) -> packageName }
 
-      Log.d(TAG, "trustedTargets (intersection) = $trustedTargets")
 
       when {
         trustedTargets.isEmpty() -> {
           // Either no trusted app is installed, or none of the trusted
           // apps declare a handler for this specific URI. Fail closed —
           // never fall back to an unpinned implicit intent.
-           Log.e(TAG, "trustedTargets is empty. installed=$installedTrustedPackages resolvable=$resolvableCandidates uri=$uri -> returning false")
           result.success(false)
         }
 
         trustedTargets.size == 1 -> {
-          Log.d(TAG, "Single trusted target: ${trustedTargets.first()}")
           val launched = launchExplicit(uri, trustedTargets.first())
-          Log.d(TAG, "launchExplicit result=$launched")
           result.success(launched)
         }
 
         else -> {
-          Log.d(TAG, "Multiple trusted targets, showing chooser: $trustedTargets")
           // Multiple trusted, resolvable apps — show a chooser built ONLY
           // from this filtered list, not the raw OS chooser.
           val launched = launchTrustedChooser(uri, trustedTargets)
-          Log.d(TAG, "launchTrustedChooser result=$launched")
           result.success(launched)
         }
       }
     } catch (e: Exception) {
-      Log.e(TAG, "launchUpiIntent exception: ${e.localizedMessage}", e)
       result.error("UPI_LAUNCH_FAILED", e.localizedMessage, null)
     }
   }
@@ -132,13 +114,11 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
       }
 
       val resolveInfo = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-      Log.d(TAG, "launchExplicit: resolveActivity for $packageName -> $resolveInfo")
 
       if (resolveInfo != null) {
         context.startActivity(intent)
         true
       } else {
-        Log.w(TAG, "launchExplicit: no resolveActivity for $packageName with uri=$uri")
         false
       }
     } catch (e: Exception) {
@@ -159,7 +139,6 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
       }
 
       if (intents.isEmpty()){ 
-        Log.w(TAG, "launchTrustedChooser: intents list empty")
         return false
       }
 
@@ -170,7 +149,6 @@ class FlutterPlugin : FlutterPlugin, MethodCallHandler {
       context.startActivity(chooser)
       true
     } catch (e: Exception) {
-      Log.e(TAG, "launchTrustedChooser exception: ${e.localizedMessage}", e)
       false
     }
   }
