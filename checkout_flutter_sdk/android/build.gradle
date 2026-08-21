@@ -54,7 +54,7 @@ android {
     }
 
     dependencies {
-        implementation("com.github.BoxPay-SDKs.cross-platform-sdk:cross-platform-sdk:1.0.1")
+        implementation("com.github.BoxPay-SDKs.cross-platform-sdk:cross-platform-sdk:1.0.2-beta18")
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         implementation("org.slf4j:slf4j-android:1.7.36")
         testImplementation("org.mockito:mockito-core:5.0.0")

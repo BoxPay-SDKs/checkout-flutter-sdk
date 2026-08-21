@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:core';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'UPIAppDetector.dart';
 
 Timer? job;
@@ -246,20 +245,26 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   void launchUPIIntentURL(String upiURL) async {
-    if (await canLaunchUrlString(upiURL)) {
-      await launchUrlString(upiURL);
-      setState(() {
-        _isIntentLaunch = true;
-      });
+    final bool launched = await UPIAppDetector.launchPayment(upiURL);
+    if (launched) {
+      setState(() { _isIntentLaunch = true; });
+
+    // Pause background work while we're not visible — reduces memory
+    // pressure that makes the OS more likely to kill the whole process
+    job?.cancel();
+    modalCheckTimer?.cancel();
+
+    await Future.delayed(const Duration(milliseconds: 100));
+    while (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
       await Future.delayed(const Duration(milliseconds: 100));
-      while (
-          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      currentUrl = baseUrl;
-      setState(() {
-        _isIntentLaunch = false;
-      });
+    }
+
+    // Resumed — restart background work
+    startFunctionCalls();
+    timerModalListener();
+
+    currentUrl = baseUrl;
+    setState(() { _isIntentLaunch = false; });
     } else {
       throw 'Could not launch $upiURL';
     }
