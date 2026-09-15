@@ -6,7 +6,7 @@ import cross_platform_sdk
 private let aliasToAcceptedSchemes: [String: [String]] = [
     "gpay":     ["tez", "gpay"],
     "paytm":    ["paytmmp", "paytm"],
-    "phonepe":  ["phonepe"],
+    "phonepe":  ["phonepe", "ppe"],
     "bhim":     ["bhim"],
     "amazon_pay": ["amazonpay"],
     "mobikwik": ["mobikwik"],
@@ -25,7 +25,11 @@ public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
     @objc public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getInstalledUpiApps":
-            let apps = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil)
+            let rawApps = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil)
+
+            let apps: [String] = (rawApps as? [KotlinPair<NSString, NSString>])?
+                .compactMap { $0.first as String? } ?? []
+
             result(apps)
             
         case "launchMandate":
@@ -40,9 +44,10 @@ public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
     }
 
     private func handleLaunch(call: FlutterMethodCall, result: @escaping FlutterResult) {
+
         guard let args = call.arguments as? [String: Any],
-              let urlString = args["url"] as? String,
-              let url = URL(string: urlString) else {
+            let urlString = args["url"] as? String,
+            let url = URL(string: urlString) else {
             result(FlutterError(code: "INVALID_URL", message: "URL missing or invalid", details: nil))
             return
         }
@@ -52,7 +57,9 @@ public class CrossPlatformSdkFlutterPlugin: NSObject, FlutterPlugin {
             return
         }
 
-        let installedAliases = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil) as? [String] ?? []
+        let rawAliases = DeviceSpecific_iosKt.getInstalledUpiApps(context: nil)
+        let installedAliases: [String] = (rawAliases as? [KotlinPair<NSString, NSString>])?
+            .compactMap { $0.first as String? } ?? []
 
         // Expand each installed alias into all of its accepted scheme variants,
         // so e.g. installed "gpay" also trusts a "tez://" URL.
