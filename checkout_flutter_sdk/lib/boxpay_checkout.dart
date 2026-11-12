@@ -247,7 +247,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
                     htmlContent = action['htmlPageString'];
                 } 
                 // Case B: Type is URL/Redirect (Just in case)
-                else if (action['type'] == 'url') {
+                else if (action['type'] == 'redirect') {
                     redirectUrl = action['url'];
                     if (action['data'] != null) {
                         transactionRequest = action['data']['txnreq'].toString();
