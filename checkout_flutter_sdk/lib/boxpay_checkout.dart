@@ -293,7 +293,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         }
       } else {
         // 6. Handle API Errors
-        _showPaymentFailedDialog();
+        throw Exception("Payment Cancelled by user");
       }
     } catch (e) {
       _showPaymentFailedDialog();
@@ -442,6 +442,10 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
           onMoreOptions: () {
             Navigator.of(context).pop(); // Close sheet
             _navigateToWebView(upiApps, referrer); // Fallback to WebView
+          },
+          onClose: () {
+             Navigator.of(context).pop(); // Close sheet
+            onPaymentResult(PaymentResultObject("NOACTION", ""));
           },
         );
       },

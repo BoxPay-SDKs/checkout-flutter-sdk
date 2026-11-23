@@ -10,6 +10,7 @@ class SwipeToPaySheet extends StatefulWidget {
   final Color merchantColor;
   final Future<void> Function() onSwipeCompleted;
   final VoidCallback onMoreOptions;
+  final VoidCallback onClose;
 
   const SwipeToPaySheet({
     Key? key,
@@ -19,6 +20,7 @@ class SwipeToPaySheet extends StatefulWidget {
     required this.merchantColor,
     required this.onSwipeCompleted,
     required this.onMoreOptions,
+    required this.onClose
   }) : super(key: key);
 
   @override
@@ -83,12 +85,37 @@ class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
         // ---------------------------------------------------------
         : [
             // 1. Drag Handle
-            Center(
-              child: Container(
-                width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+            // 1. Drag Handle + Close button
+Padding(
+  padding: const EdgeInsets.only(bottom: 12),
+  child: SizedBox(
+    height: 32,                     
+    child: Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          width: 40, height: 12, margin: const EdgeInsets.only(top: 0),
+          decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+        ),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onClose,
+              borderRadius: BorderRadius.circular(20),
+              child: const Padding(
+                padding: EdgeInsets.all(6.0),
+                child: Icon(Icons.close, color: Colors.grey, size: 32),
               ),
             ),
+          ),
+        ),
+      ],
+    ),
+  ),
+),
 
             // 2. Header (Pay Amount + More Options)
             Row(
