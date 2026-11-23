@@ -24,6 +24,16 @@ class BoxPayCheckout {
   late String domain;
   late bool isQREnabled;
 
+  /// Seconds left on the auto-refund countdown (null = no countdown running).
+  /// Listened to by [SwipeToPaySheet] and shown under the loader.
+  final ValueNotifier<int?> _autoRefundCountdown = ValueNotifier<int?>(null);
+
+  static const int _statusPollIntervalSeconds = 4;
+  static const int _defaultAutoRefundTimeoutSeconds = 30;
+  static const String _autoRefundTimerPath = 'auto-refund-timer';
+  static const String _pendingTimeoutMessage =
+      'If any amount is deducted or blocked, it will be refunded or released automatically, as applicable.';
+
   BoxPayCheckout({
     required this.context,
     required this.token,
@@ -114,7 +124,8 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
           amount: extractAmount(responseData),
           upiApps: upiAppsString,
           referrer: referrer,
-          shopperDetails: shopperDetails
+          shopperDetails: shopperDetails,
+          autoRefundEnabled: extractAutoRefundEnabled(responseData)
         );
       } else {
         // No saved card? Go straight to WebView
@@ -275,8 +286,15 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
          if (navResult == "completed") {
             
              final statusData = await fetchTransactionStatus();
-             final finalStatus = statusData['status'];
-             final transactionId = statusData['transactionId']?.toString() ?? "";
+             var finalStatus = "PENDING";
+             var transactionId = statusData['transactionId']?.toString() ?? "";
+
+             
+             if (finalStatus == 'PENDING') {
+               final resolved = await _waitForPendingToResolve(transactionId);
+               finalStatus = resolved['status']!;
+               transactionId = resolved['transactionId']!;
+             }
 
              if (finalStatus == 'PAID' || finalStatus == 'SUCCESS' || finalStatus == 'APPROVED') {
                 onPaymentResult(PaymentResultObject("Success", transactionId));
@@ -296,8 +314,80 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         _showPaymentFailedDialog();
       }
     } catch (e) {
-      _showPaymentFailedDialog();
+      if (e is _PendingTimeoutException) {
+        _showPaymentFailedDialog(
+          title: 'Payment failed',
+          message: _pendingTimeoutMessage,
+        );
+      } else {
+        _showPaymentFailedDialog();
+      }
       throw e;
+    }
+  }
+
+  /// Starts the server-side auto-refund timer for a pending transaction.
+  /// Returns the parsed response (token, transactionId, timerStarted,
+  /// autoRefundAt, autoRefundTimeoutSeconds) or null if the call failed.
+  Future<Map<String, dynamic>?> startAutoRefundTimer(String transactionId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/transactions/$transactionId/$_autoRefundTimerPath'),
+        headers: {
+          'X-Request-Id': _generateRandomRequestId(),
+          'Authorization': 'Session $shopperToken',
+          'X-Client-Connector-Name': 'Flutter SDK',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'transactionId': transactionId}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Runs the countdown and polls the status every 4 seconds.
+  /// Returns {status, transactionId} once the status is no longer PENDING.
+  /// Throws [_PendingTimeoutException] if it is still PENDING when time is up.
+  Future<Map<String, String>> _waitForPendingToResolve(String transactionId) async {
+    final timerData = await startAutoRefundTimer(transactionId);
+    final timeoutSeconds =
+        (timerData?['autoRefundTimeoutSeconds'] as num?)?.toInt() ??
+            _defaultAutoRefundTimeoutSeconds;
+    final deadline = DateTime.now().add(Duration(seconds: timeoutSeconds));
+
+    try {
+      int tick = 0;
+      while (true) {
+        final remaining =
+            (deadline.difference(DateTime.now()).inMilliseconds / 1000).ceil();
+        _autoRefundCountdown.value = remaining < 0 ? 0 : remaining;
+        final timeUp = remaining <= 0;
+
+        // Poll every 4 seconds, plus one last check when the timer ends.
+        if (timeUp || (tick > 0 && tick % _statusPollIntervalSeconds == 0)) {
+          try {
+            final data = await fetchTransactionStatus();
+            final status = (data['status'] ?? '').toString().toUpperCase();
+            if (status != 'PENDING') {
+              return {
+                'status': status,
+                'transactionId': data['transactionId']?.toString() ?? transactionId,
+              };
+            }
+          } catch (_) {
+            // Network hiccup: keep counting down and try again on the next poll.
+          }
+          if (timeUp) throw _PendingTimeoutException();
+        }
+
+        await Future.delayed(const Duration(seconds: 1));
+        tick++;
+      }
+    } finally {
+      _autoRefundCountdown.value = null;
     }
   }
 
@@ -415,7 +505,8 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     required String amount,
     required String upiApps,
     required String referrer,
-    required Map<String, dynamic> shopperDetails
+    required Map<String, dynamic> shopperDetails,
+    required bool autoRefundEnabled,
   }) {
 
     showModalBottomSheet(
@@ -443,6 +534,8 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
             Navigator.of(context).pop(); // Close sheet
             _navigateToWebView(upiApps, referrer); // Fallback to WebView
           },
+          autoRefundEnabled: autoRefundEnabled,
+          countdownListenable: _autoRefundCountdown,
         );
       },
     );
@@ -466,13 +559,16 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     );
   }
 
-  void _showPaymentFailedDialog() {
+  void _showPaymentFailedDialog({
+    String title = 'Payment Failed',
+    String message = 'Please retry using other payment method or try again in sometime',
+  }) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Payment Failed'),
-          content: const Text('Please retry using other payment method or try again in sometime'),
+          title: Text(title),
+          content: Text(message),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -492,6 +588,12 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
     final amount = parsedData['paymentDetails']['money']['amountLocale'];
     final currency = parsedData['paymentDetails']['money']['currencySymbol'];
     return "$currency$amount";
+  }
+
+  bool extractAutoRefundEnabled(String responseData) {
+    final Map<String, dynamic> parsedData = jsonDecode(responseData);
+    final autoRefundEnabled = parsedData['configs']['autoRefundEnabled'];
+    return autoRefundEnabled;
   }
 
   String extractUniqueRef(String responseData) {
@@ -610,3 +712,6 @@ Future<Map<String, String>> _getDeviceDetails() async {
   };
 }
 }
+
+/// Thrown when a transaction is still PENDING after the auto-refund timer ends.
+class _PendingTimeoutException implements Exception {}
