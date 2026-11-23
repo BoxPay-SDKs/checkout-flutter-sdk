@@ -30,7 +30,8 @@ class BoxPayCheckout {
 
   static const int _statusPollIntervalSeconds = 4;
   static const int _defaultAutoRefundTimeoutSeconds = 30;
-  static const String _autoRefundTimerPath = 'auto-refund-timer';
+  // TODO: confirm the exact auto-refund timer endpoint with BoxPay docs.
+  static const String _autoRefundTimerPath = '/auto-refund-timer';
   static const String _pendingTimeoutMessage =
       'If any amount is deducted or blocked, it will be refunded or released automatically, as applicable.';
 
@@ -286,7 +287,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
          if (navResult == "completed") {
             
              final statusData = await fetchTransactionStatus();
-             var finalStatus = "PENDING";
+             var finalStatus = (statusData['status'] ?? '').toString().toUpperCase();
              var transactionId = statusData['transactionId']?.toString() ?? "";
 
              
@@ -358,35 +359,64 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
             _defaultAutoRefundTimeoutSeconds;
     final deadline = DateTime.now().add(Duration(seconds: timeoutSeconds));
 
-    try {
-      int tick = 0;
-      while (true) {
-        final remaining =
-            (deadline.difference(DateTime.now()).inMilliseconds / 1000).ceil();
-        _autoRefundCountdown.value = remaining < 0 ? 0 : remaining;
-        final timeUp = remaining <= 0;
+    final completer = Completer<Map<String, String>>();
+    Timer? countdownTimer;
+    Timer? pollTimer;
+    bool polling = false;
 
-        // Poll every 4 seconds, plus one last check when the timer ends.
-        if (timeUp || (tick > 0 && tick % _statusPollIntervalSeconds == 0)) {
-          try {
-            final data = await fetchTransactionStatus();
-            final status = (data['status'] ?? '').toString().toUpperCase();
-            if (status != 'PENDING') {
-              return {
-                'status': status,
-                'transactionId': data['transactionId']?.toString() ?? transactionId,
-              };
-            }
-          } catch (_) {
-            // Network hiccup: keep counting down and try again on the next poll.
-          }
-          if (timeUp) throw _PendingTimeoutException();
+    int secondsLeft() {
+      final ms = deadline.difference(DateTime.now()).inMilliseconds;
+      return ms <= 0 ? 0 : (ms / 1000).ceil();
+    }
+
+    Future<void> poll({bool force = false}) async {
+      if (completer.isCompleted || (polling && !force)) return;
+      polling = true;
+      try {
+        final data = await fetchTransactionStatus()
+            .timeout(const Duration(seconds: 3));
+        final status = (data['status'] ?? '').toString().toUpperCase();
+        if (status != 'PENDING' && !completer.isCompleted) {
+          completer.complete({
+            'status': status,
+            'transactionId': data['transactionId']?.toString() ?? transactionId,
+          });
         }
-
-        await Future.delayed(const Duration(seconds: 1));
-        tick++;
+      } catch (_) {
+        // Network hiccup / slow response: next poll will try again.
+      } finally {
+        polling = false;
       }
+    }
+
+    _autoRefundCountdown.value = secondsLeft();
+
+    // 1) Countdown: ticks every second, never blocked by network calls.
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) async {
+      final remaining = secondsLeft();
+      _autoRefundCountdown.value = remaining;
+      if (remaining <= 0) {
+        t.cancel();
+        pollTimer?.cancel();
+        // One last status check before giving up.
+        await poll(force: true);
+        if (!completer.isCompleted) {
+          completer.completeError(_PendingTimeoutException());
+        }
+      }
+    });
+
+    // 2) Polling: every 4 seconds, skipped if the previous call is still running.
+    pollTimer = Timer.periodic(
+      const Duration(seconds: _statusPollIntervalSeconds),
+      (_) => poll(),
+    );
+
+    try {
+      return await completer.future;
     } finally {
+      countdownTimer.cancel();
+      pollTimer.cancel();
       _autoRefundCountdown.value = null;
     }
   }
