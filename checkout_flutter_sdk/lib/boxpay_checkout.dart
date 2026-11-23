@@ -312,7 +312,7 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
         }
       } else {
         // 6. Handle API Errors
-        _showPaymentFailedDialog();
+        throw Exception("Payment Cancelled by user");
       }
     } catch (e) {
       if (e is _PendingTimeoutException) {
@@ -566,6 +566,10 @@ String get _baseUrl => 'https://${env}apis.boxpay.$domain/v0/checkout/sessions/$
           },
           autoRefundEnabled: autoRefundEnabled,
           countdownListenable: _autoRefundCountdown,
+          onClose: () {
+             Navigator.of(context).pop(); // Close sheet
+            onPaymentResult(PaymentResultObject("NOACTION", ""));
+          },
         );
       },
     );
