@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'image_loader.dart';
 import 'dart:async';
@@ -10,6 +11,8 @@ class SwipeToPaySheet extends StatefulWidget {
   final Color merchantColor;
   final Future<void> Function() onSwipeCompleted;
   final VoidCallback onMoreOptions;
+  final bool autoRefundEnabled;
+  final ValueListenable<int?>? countdownListenable; // seconds left, null = hidden
   final VoidCallback onClose;
 
   const SwipeToPaySheet({
@@ -20,6 +23,8 @@ class SwipeToPaySheet extends StatefulWidget {
     required this.merchantColor,
     required this.onSwipeCompleted,
     required this.onMoreOptions,
+    required this.autoRefundEnabled,
+    this.countdownListenable,
     required this.onClose
   }) : super(key: key);
 
@@ -29,6 +34,7 @@ class SwipeToPaySheet extends StatefulWidget {
 
 class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
   bool isProcessing = false;
+  static final ValueNotifier<int?> _noCountdown = ValueNotifier<int?>(null);
 
   static const String packageName = 'boxpay_checkout_flutter_sdk';
 
@@ -64,17 +70,37 @@ class _SwipeToPaySheetState extends State<SwipeToPaySheet> {
         // ---------------------------------------------------------
         ? [
             SizedBox(
-              // We give it a fixed height roughly equal to the content 
-              // so the sheet doesn't shrink/collapse visually.
-              height: 250, 
-              child: Center(
-                child: Lottie.asset(
-                  'assets/animations/BoxPayLogo.json',
-                  package: packageName,
-                  height: 80, 
-                  width: 80,
-                  fit: BoxFit.contain,
-                ),
+              height: 250,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Lottie.asset(
+                    'assets/animations/BoxPayLogo.json',
+                    package: packageName,
+                    height: 80,
+                    width: 80,
+                    fit: BoxFit.contain,
+                  ),
+                  // Auto-refund countdown, shown just below the loader
+                  ValueListenableBuilder<int?>(
+                    valueListenable: widget.countdownListenable ?? _noCountdown,
+                    builder: (context, secondsLeft, _) {
+                      if (secondsLeft == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Column(
+                          children: [
+                            Text("Confirming your payment…",
+                              style: TextStyle(color: Colors.grey, fontSize: 14, fontFamily: 'Poppins', fontWeight: FontWeight.w500, package: packageName)),
+                            const SizedBox(height: 4),
+                            Text(_formatTime(secondsLeft),
+                              style: TextStyle(color: _textColor, fontSize: 22, fontFamily: 'Poppins', fontWeight: FontWeight.w700, package: packageName)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             )
           ]
@@ -193,6 +219,12 @@ Padding(
     );
   }
 
+
+  String _formatTime(int totalSeconds) {
+    final m = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final sec = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$sec';
+  }
 
   Widget _buildCustomSwipeSlider(double maxWidth, String displayAmount) {
     // Total travel distance = Container Width - Knob Width - (Padding * 2)
